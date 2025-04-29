@@ -1,0 +1,133 @@
+\documentclass{article}
+
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2022
+
+
+% ready for submission
+\usepackage[preprint]{neurips_2022}
+
+
+% to compile a preprint version, e.g., for submission to arXiv, add add the
+% [preprint] option:
+%     \usepackage[preprint]{neurips_2022}
+
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+%     \usepackage[final]{neurips_2022}
+
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2022}
+
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+\newcommand{\new}[1]{{\color{red} #1}}
+
+\title{ECE228 Project Proposal:  Extending Fourier-DeepONet for Full Waveform Inversion}
+
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+
+\author{%
+  Girish Krishnan \\
+  gikrishnan@ucsd.edu
+  % examples of more authors
+  \And
+  Ryan Irwandy \\
+  rirwandy@ucsd.edu
+  \And
+  Yash Puneet \\
+  ypuneet@ucsd.edu
+  \And
+  Harini Gurusankar \\
+  hgurusan@ucsd.edu
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \AND
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+}
+
+
+\begin{document}
+
+
+\maketitle
+
+
+% \begin{abstract}
+% \end{abstract}
+% \noindent Please submit your proposal as a single PDF file using this template. Use the template as follows:
+% \begin{itemize}
+%     \item Make a copy of this template (do NOT edit) as a new Overleaf project.
+%     \item Change title to \textbf{ECE228 Project Proposal: Your Title}.
+%     \item Change author name and email to your  team members' names and emails.
+%     \item Follow the format instructions in Section \ref{sec:1} to write your proposal.
+%     \item Delete the instructions in your final submitted report.
+% \end{itemize}
+
+
+% \section{Project Proposal: Track 1}\label{sec:1}
+
+% Your proposal should include:
+% \begin{itemize}
+%     \item Problem background \& Motivation
+%     \item Related Works [please include at least one reference paper published within the past 5 years that you treat as baseline for Track 1 or a link to a dataset for Track 2]
+%     \item High-level Methodology
+% \end{itemize}
+
+\vspace{-1em}
+
+\section{Problem Background \& Motivation}
+
+Full waveform inversion (FWI) is a computational technique used in geophysics to infer subsurface properties by minimizing the difference between observed and simulated seismic waveforms. Traditional FWI methods involve solving complex partial differential equations (PDEs) iteratively, which can be computationally intensive and sensitive to initial conditions. Recent advancements in machine learning have introduced data-driven approaches to FWI, aiming to reduce computational costs and improve robustness. However, challenges remain in generalizing these models to varying seismic source parameters and handling noisy or incomplete data. Addressing these challenges is crucial for reliable subsurface imaging in applications such as energy exploration and earthquake hazard assessment.
+
+\section{Related Works}
+
+The Fourier-DeepONet model \citep{zhu2023fourier} introduces a neural operator framework that enhances the DeepONet architecture with Fourier features, enabling it to generalize across varying seismic source frequencies and locations. This model demonstrates improved accuracy and robustness compared to previous data-driven FWI methods. The Kaggle competition hosted by Yale and UNC-Chapel Hill \citep{kaggle2025} provides a dataset and platform for evaluating FWI models on realistic seismic data, encouraging the development of physics-guided machine learning approaches. Additionally, the OpenFWI dataset \citep{deng2022openfwi} offers large-scale, multi-structural synthetic datasets for benchmarking FWI methods. These resources collectively provide a foundation for reproducing and extending the Fourier-DeepONet model in practical settings.
+
+\section{High-Level Methodology}
+
+Our project aims to reproduce the Fourier-DeepONet model and evaluate its performance on the Kaggle Geophysical Waveform Inversion competition dataset. We will reimplement the architecture and training procedure described in \citet{zhu2023fourier}, adapting it to the competition format, which requires predicting subsurface velocity maps from seismic waveform inputs. Although the Kaggle dataset differs from the synthetic datasets used in the original paper in terms of geological complexity, noise, and data structure, it was created by the same research group and tests similar inversion capabilities. Our goal is to achieve strong performance under the competition's evaluation metric, which is mean absolute error (MAE) across predicted subsurface velocity values at odd-indexed spatial positions.
+
+We will train Fourier-DeepONet on subsets of the data corresponding to different geological styles and source configurations and test generalization to unseen styles. To extend the baseline, we will also experiment with standard DeepONets, Fourier Neural Operators (FNOs), and uncertainty quantification techniques such as Monte Carlo dropout. For evaluation, we will report both MAE and secondary metrics such as mean squared error (MSE) and structural similarity index measure (SSIM) to assess image quality. The best models will be submitted to the Kaggle competition to benchmark their real-world effectiveness on this challenging physics-guided inversion task.
+
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+
+
+\end{document}
