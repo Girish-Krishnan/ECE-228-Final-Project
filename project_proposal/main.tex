@@ -1,0 +1,132 @@
+\documentclass{article}
+
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2022
+
+
+% ready for submission
+\usepackage[preprint]{neurips_2022}
+
+
+% to compile a preprint version, e.g., for submission to arXiv, add add the
+% [preprint] option:
+%     \usepackage[preprint]{neurips_2022}
+
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+%     \usepackage[final]{neurips_2022}
+
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2022}
+
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+\newcommand{\new}[1]{{\color{red} #1}}
+
+\title{ECE228 Project Proposal: Benchmarking Physics-Informed Models for Full Waveform Inversion}
+
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+
+\author{%
+  Girish Krishnan \\
+  gikrishnan@ucsd.edu
+  % examples of more authors
+  \And
+  Ryan Irwandy \\
+  rirwandy@ucsd.edu
+  \And
+  Yash Puneet \\
+  ypuneet@ucsd.edu
+  \And
+  Harini Gurusankar \\
+  hgurusan@ucsd.edu
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \AND
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+}
+
+
+\begin{document}
+
+
+\maketitle
+
+
+% \begin{abstract}
+% \end{abstract}
+% \noindent Please submit your proposal as a single PDF file using this template. Use the template as follows:
+% \begin{itemize}
+%     \item Make a copy of this template (do NOT edit) as a new Overleaf project.
+%     \item Change title to \textbf{ECE228 Project Proposal: Your Title}.
+%     \item Change author name and email to your  team members' names and emails.
+%     \item Follow the format instructions in Section \ref{sec:1} to write your proposal.
+%     \item Delete the instructions in your final submitted report.
+% \end{itemize}
+
+
+% \section{Project Proposal: Track 1}\label{sec:1}
+
+% Your proposal should include:
+% \begin{itemize}
+%     \item Problem background \& Motivation
+%     \item Related Works [please include at least one reference paper published within the past 5 years that you treat as baseline for Track 1 or a link to a dataset for Track 2]
+%     \item High-level Methodology
+% \end{itemize}
+
+\vspace{-1em}
+
+\section{Problem Background \& Motivation}
+
+Full waveform inversion (FWI) is a computational method used in geophysics to infer subsurface properties by minimizing the difference between observed and simulated seismic waveforms. Traditional FWI relies on solving partial differential equations (PDEs) iteratively, which is computationally intensive and sensitive to initial conditions. Recent machine learning methods aim to reduce computational costs and improve robustness but face challenges in generalizing to varying source parameters and handling noisy or incomplete data. Addressing these issues is essential for reliable subsurface imaging in applications such as energy exploration and earthquake hazard assessment.
+
+\section{Related Works}
+
+The Fourier-DeepONet model \citep{zhu2023fourier} enhances the DeepONet neural operator architecture with Fourier features, enabling it to generalize across varying seismic source frequencies and locations, improving accuracy and robustness over previous data-driven FWI approaches. InversionNet \citep{wu2018inversionnet} employs a convolutional neural network (CNN) with a conditional random field (CRF) to directly map seismic data to subsurface velocity models, reducing computational cost while embedding spatial and temporal constraints. Neural ordinary differential equations (Neural ODEs) \citep{chen2018neural} model hidden states through differential equations, offering continuous-depth modeling with constant memory use. The PCA-SOM approach \citep{zhang2019pca} combines principal component analysis (PCA) for dimensionality reduction with self-organizing maps (SOMs) for clustering, effectively handling the high dimensionality and redundancy often present in geophysical data. While these models have demonstrated effectiveness in controlled settings, their performance on complex, real-world datasets, such as those presented in the Kaggle Geophysical Waveform Inversion competition \citep{kaggle2025}, remains uncertain. Challenges in generalization to diverse geology, noise robustness, and computational efficiency remain, and our project addresses these by benchmarking these approaches on the competition dataset to evaluate their strengths and limitations in practice.
+
+\section{High-Level Methodology}
+
+We will benchmark four approaches using the Kaggle Geophysical Waveform Inversion competition dataset \citep{kaggle2025}. We will reimplement the Fourier-DeepONet architecture and training procedure, adapting it to predict subsurface velocity maps from seismic inputs. We will implement InversionNet as described by \citet{wu2018inversionnet}, using CNNs and CRFs trained on Kaggle subsets to assess MAE, training time, and generalization. We will develop a Neural ODE model that passes hidden states through a differential equation solver for continuous-depth representation. Finally, we will apply the PCA-SOM approach from \citet{zhang2019pca}, using PCA to reduce dimensionality and SOMs for clustering seismic data. Each model will be evaluated on mean absolute error (MAE), mean squared error (MSE), and structural similarity index (SSIM). We will submit the top-performing models to the Kaggle competition to benchmark their effectiveness and aim to achieve the best possible performance on the competition leaderboard while systematically comparing the strengths and weaknesses of these physics-informed and data-driven methods.
+
+
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+
+
+\end{document}
