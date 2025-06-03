@@ -4,7 +4,7 @@
 
 ![](./media/poster.png)
 
-[<center>Click here to view the poster!</center>](https://docs.google.com/presentation/d/1wfly51wmukF_M-mXVlJaRHG03IYZg2LK1fLiKip6Jt8/edit?usp=sharing)
+[Click here to view the poster!](https://docs.google.com/presentation/d/1wfly51wmukF_M-mXVlJaRHG03IYZg2LK1fLiKip6Jt8/edit?usp=sharing)
 
 ---
 
