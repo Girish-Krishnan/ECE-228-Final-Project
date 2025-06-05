@@ -1,1 +1,135 @@
-% report goes here
+\documentclass{article}
+
+
+% if you need to pass options to natbib, use, e.g.:
+    % \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2024
+
+
+% ready for submission
+\usepackage[preprint]{neurips_2024}
+
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+\newcommand{\instructions}[1]{{\color{blue} #1}}
+
+\title{Final Project For ECE228 Track Number \#}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+
+\author{%
+  Group Number \#: First Name, Last Name
+  % examples of more authors
+  \And
+  First Name, Last Name \\
+  \And
+  First Name, Last Name \\
+  \And
+  First Name, Last Name \\
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \AND
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+}
+
+
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Please write your abstract here. It should be a snapshot of the entire report.
+\end{abstract}
+
+
+%%% BEGIN INSTRUCTIONS %%%
+
+
+\section*{Submission guideline: Please remove THIS section and all the \textcolor{blue}{blue} instructions from your final submission}
+\subsection*{Submission guideline}
+\begin{itemize}
+    \item Please mention the track number at title (\textbf{Track 1}: Reproducing an existing machine learning + physical / engineering / science application paper and implement improvement ideas on top ot it; \textbf{Track 2}: Open-ended project. 
+    \item Please enter the \textbf{Group Number \#} before the first name of the team. You can find your group number in this  \href{https://docs.google.com/spreadsheets/d/1WOi940jN9U6ZHX3xf5tDbw3-igv2bbjXg1W5AETX8cI/edit?usp=sharing}{Google sheet}. 
+    \item For citing related literature, please use \verb+\cite+ and Bibtex file (bib.bib in the current folder) to manage your citations.
+    \item A good report should include the following:
+    \begin{itemize}
+        \item Introduction, Background and Related Works. What task/problem are you targeting? What are the prior works in tackling this problem and what are their  limitations? What is your contribution to this problem?
+        \item What method do you propose to solve the problem (e.g. data collection/processing, model input/output, model architecture design, loss function design, incorporate physics knowledge etc)? What's new in your approach? What are the technical challenges that you tackled? 
+        \item Validate your proposed method with experiments and compare your model with existing baselines. What hyper-parameters/dataset are you using? How does your approach compared to other methods under a fair comparison setup? Did you use a package or write your own code (for some parts)? It is fine if you use a package, though this means other aspects of your project must be more ambitious.
+        \item Summarize your findings from the project. Highlight your contributions and discuss the limitations. Outlook for future work.
+    \end{itemize}
+    \item As you work on your final project, ensure you start early and plan your tasks effectively. Document each section clearly in your report. Good luck!
+\end{itemize}
+
+%%% END INSTRUCTIONS %%%
+
+
+\section{Introduction}
+\instructions{Introduction [10\%]: provide the background and motivation of the problem, and why it is important. Also, include an overview of your project and a brief summary of contributions (listed in bullet points)}
+
+
+\section{Related work}
+\instructions{Related works [5\%]: Please review the related work in this area, state the challenges/limitations of the existing methods, and how does your proposed work will help address the prior limitations and/or advance the current state-of-the-art for this problem.}
+
+\section{Methodology}
+\instructions{Method/Approach [40\%]: this should be the main section of your report. Describe your approach, any equation and/or algorithm you developed to solve the problem. This part will be evaluated based on both scientific merit and technical depth.} 
+
+
+\section{Experiments}
+\instructions{Results [30\%]: present your results and provide sufficient discussions of the results. 1) Describe what dataset is being used, details in data processing, train-test data split, and hyperparameter choices in your model etc. Provide the sufficient details such that if a reader would like to reproduce your results, they have enough information to do it. 2) Include figures and/or tables showing the quantitative and qualitative performance of your method; 3) Comparison to necessary baseline methods and comparison to your proposed method.} 
+
+\section{Conclusion}
+\instructions{Conclusion [5\%]: Summarize your project and findings. High-level discussion about what you have learned from this project, what works, and what does not work, and ideas/suggestions for future work if you/others want to work on this problem.}
+
+\newpage
+\instructions{The following sections do not count towards the Page Limits.}
+\section*{Appendix}
+\subsection*{Github Link}
+\instructions{Github Link [10\%]. Include a Link to your Project Github with your project codes with necessary documentation. Please include a top-level README.md file in your github repo. This top-level README should explain the layout of this repository and instructions such that users can run your code. Ensure your code can run and reproduce the results you presented in the report. Note that it is your responsibility to ensure that the code repo is working and the README.md is clear to follow.}
+
+\subsection*{Team Member Contribution}
+\instructions{Describing each team member's contribution for this project (e.g., conceptualization, Data curation, Methodology, Software/Experiments, Report Writing, Poster preparation, etc)} 
+
+\bibliography{bib}
+\bibliographystyle{abbrvnat}
+
+
+
+
+
+
+
+
+\end{document}
