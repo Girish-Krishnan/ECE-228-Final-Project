@@ -118,9 +118,9 @@ For this project, a subset of the OpenFWI dataset is used to test the various mo
 The data is then preprocessed by normalization for certain models and then splitting the dataset by batch size into training, testing, and validation sets. After the data is processed, it is passed to a model, which outputs a 70 by 70 velocity map. This velocity map is then compared to a ground truth velocity map and metrics are computed. The metrics chosen for analysis are as shown below:
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\linewidth]{Screenshot 2025-06-05 at 4.10.29 PM.png}
+    \includegraphics[width=0.5\linewidth]{figures/eval_metrics.png}
     \caption{Formulas for chosen metrics}
-    \label{fig:enter-label}
+    \label{fig:eval-metrics}
 \end{figure}
 \begin{itemize}
     \item MAE (Mean Absolute Error): This is the base metric for the Kaggle competition.
@@ -132,16 +132,16 @@ The data is then preprocessed by normalization for certain models and then split
 \subsubsection{Neural ODE}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\linewidth]{Screenshot 2025-06-05 at 4.28.27 PM.png}
+    \includegraphics[width=0.5\linewidth]{figures/neuralode_structure.png}
     \caption{Augmented Neural ODE General Structure}
-    \label{fig:enter-label}
+    \label{fig:neuralode_structure}
 \end{figure}
 One of the models chosen to experiment with was the Neural ODE as learned in the course. Neural ODEs are differential equation solvers, with the solver essentially being a black-box. The model can be implemented by using the torchdiffeq package in Python and the function odeint from this package. The structure of this model was a convolutional encoder, a three-layer MLP as the base function, and a decoder to shape the output as a 70 x 70 tensor to compare against the ground truth. Two different Augmented Neural ODEs were also created. One model had the same MLP as a base function and the other had a simple convolutional network as its base. Both models had an augmented dimension of 1. Augmented Neural ODEs were chosen because the augmented dimension helps in cases where an extra dimension is needed so that trajectories do not intersect. As can be seen in \textbf{Figure 2}, the input seismic data is passed into an encoder and then augmented. This augmented data is passed into the differential equation solver and then decoded into the output velocity map. In \textbf{Figure 3}, the more specific structure of the Augmented Neural ODE with the MLP base is illustrated for further information.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\linewidth]{Screenshot 2025-06-05 at 4.26.28 PM.png}
+    \includegraphics[width=0.5\linewidth]{figures/augmented_neuralode.png}
     \caption{Augmented Neural ODE (MLP)}
-    \label{fig:enter-label}
+    \label{fig:aug-neuralode-mlp}
 \end{figure}
 
 \section{Experiments}
