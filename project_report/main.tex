@@ -23,7 +23,7 @@
 \usepackage{float}
 \newcommand{\instructions}[1]{{\color{blue} #1}}
 
-\title{Final Project For ECE228 Track Number \# 2}
+\title{Final Project For ECE228 Track Number \# 1}
 
 % The \author macro works with any number of authors. There are two commands
 % used to separate the names and addresses of multiple authors: \And and \AND.
@@ -35,14 +35,14 @@
 
 
 \author{%
-  Group Number \#: First Name, Last Name
+  Group Number \#15: Harini Gurusankar
   % examples of more authors
   \And
-  First Name, Last Name \\
+  Girish Krishnan \\
   \And
-  First Name, Last Name \\
+  Ryan Irwandy  \\
   \And
-  First Name, Last Name \\
+  Yash Puneet \\
   % Coauthor \\
   % Affiliation \\
   % Address \\
@@ -100,10 +100,67 @@ Please write your abstract here. It should be a snapshot of the entire report.
 
 
 \section{Introduction}
-\instructions{Introduction [10\%]: provide the background and motivation of the problem, and why it is important. Also, include an overview of your project and a brief summary of contributions (listed in bullet points)}
+\instructions{Introduction [10\%]: provide the background and motivation of the problem, and why it is important. Also, include an overview of your project and a brief summary of contributions (listed in bullet points)} 
+
+    Geographical Waveform Inversion is a technique for viewing the Earth's subterranean contents. It is performed by using seismic wave generators, such as drills or thumpers, which are then picked up by receivers placed deep underground. More specifically, it is the velocity of the waves is recieved which can be used to generate a corresponding velocity map. Areas marked with high velocities indicate underground materials where seismic waves travel through quickly, and vice versa for areas marked with low velocities. From here, geologists can make inferences and determine the composition of materials underground using this data, which has many practical applications. These include detecting oil deposits, underground stability for urban development, and fault detection for predicting earthquakes. In essence, it is an extremely similar technique to how ultrasound is performed on human bodies, except now done on the Earth.  
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{figures/intro2.png}
+        \caption{Velocity Map Formation and its Practical Uses }
+        \label{fig:intro2}
+    \end{figure}
+    
+    Unfortunately, however, the placement of receivers underground poses two glaring issues. First and foremost, it is extremely expensive to do, not too different from the cost and manpower it takes to install underground power lines. Second, placing receivers underground may disrupt the subterranean environment that may need to be carefully preserved based on the context. In a hypothetical example, its possible that waveform inversion may be used to detect underground burrows of moles to predict their population. However, installing receivers may destroy these tunnels as a result.  
+
+    Fortunately, it is possible to install receivers that collect seismic data above ground. They instead capture the reflections of seismic waves to see what is underground, but this method is extremely noisy.   
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{figures/intro1.png}
+        \caption{Collection of Seismic Waveform Data via Above-Ground recievers }
+        \label{fig:intro1}
+    \end{figure}
+
+    Our work involves using machine learning methods to predict these velocity maps via data from the seismic waves and receiver reflections using several different models. In this study, we employ the following six machine learning models: 
+
+    \begin{itemize}
+        \item Fourier Deep ONet
+        \item Residual UNet 
+        \item InversionNet + VelocityGAN 
+        \item 2D Fourier Neural Operator
+        \item Augmented Neural ODE 
+        \item PCA Dimensionality Reduction
+    \end{itemize}
+
+    Of these models, the best performing was Fourier Deep ONet, which achieved a Mean Absolute Error (MAE) of 59.54 on the validation set. At time of writing we are currently 591th place in a Kaggle competition of approximately \~ 1000 people. 
+
+    Each person has made the following contributions: 
+
+    \begin{itemize}
+        \item Harini Gurusankar - 
+        \item Ryan Irwandy - Worked on the PCA dimensionality reduction MLP Model. 
+        \item Girish Krishnan -
+        \item Yash Puneet - 
+    \end{itemize}
+
+    
 
 
-\section{Related work}
+\section{Related work} 
+
+    In addition, PCA has been performed before to geographical waveform inversion problems. Specifically in the domain of classifying gas hydrates through a unsupervised neural network model known as Self Organizing Maps (SOM). More specifically, the data's dimensionality is reduced via PCA and then fed into an SOM to cluster different gas hydrates underground.  
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{figures/related1.png}
+        \caption{PCA-SOM to classify Gas Hydrates Underground}
+        \label{fig:related1}
+    \end{figure}
+    
+    However this problem is a classification problem, and our goal is to predict, specifically, velocity data. However PCA still remains a very good way of reducing dimensionality via principal components while still retaining the variability of our dataset.
+
+
 \instructions{Related works [5\%]: Please review the related work in this area, state the challenges/limitations of the existing methods, and how does your proposed work will help address the prior limitations and/or advance the current state-of-the-art for this problem.}
 
 \section{Methodology}
@@ -142,13 +199,65 @@ One of the models chosen to experiment with was the Neural ODE as learned in the
     \includegraphics[width=0.5\linewidth]{figures/augmented_neuralode.png}
     \caption{Augmented Neural ODE (MLP)}
     \label{fig:aug-neuralode-mlp}
-\end{figure}
+\end{figure} 
+
+\subsubsection{PCA-MLP} 
+
+To perform Principal Component Analysis (PCA), one must first normalize the data. The most common method of doing so is via Z-Score Normalization: 
+ \\
+ \\$\frac{x-\mu}{\sigma}$ \\
+ \\$\mu$ = Mean\\  
+ \\$\sigma$ = Standard Deviation\\ 
+ \\$x$ = Datapoint\\ 
+ \\ 
+The reason for normalizing the data is so features with inherently larger magnitudes do not overshadow those with smaller magnitudes. An example of this is contrasting the number of molecules in a human which is several orders of magnitude larger than human height in inches. 
+
+After performing normalization, we perform PCA analysis by calculating the eigenvectors of the following formula: 
+ \\ 
+ \\$CV=LV$\\
+ \\$C$ = Covariance Matrix\\  
+ \\$V$ = Eigenvectors (Principal Components)\\ 
+ \\$L$ = Eigenvalues (Loading Scores)\\ 
+ \\  
+Where $C$ represents the matrix of covariances of each feature against each other, while $L$ and $C$ represent the loading scores and principal components respectively. 
+
+The principal components are computed by calculating an eigenvector of "best fit" that goes through all datapoints represented by $n$ features. The number of eigenvectors calculated is usually up to the number of eigenvectors that describes 95\% of the variability in the dataset as described by the loading scores. Each eigenvector will be perpendicular to the last. The weights that make up an principal component (PC) are known as loading scores, and describe how much a given PC accounts for the variability in a dataset. The PCs now act as the new dependent variables instead of our features.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/PCA1.png}
+    \caption{PCA Data Preparation}
+    \label{fig:pca1}
+\end{figure}  
+PCA is performed on the seismic waveform dataset by first taking a single batch, which is of dimensions 5 x 1000 x 70. We then further subdivide the data for each source, resulting in a 1000 x 70 matrix where each column represents a given receiver. Because there are so many receivers, we would like to reduce this dimension since its possible that they may be providing redundant data. We reduce this dimension from 70 receivers to 18 PCs. This is partially explained by empirical testing that showed that 18 PCs regularly captured 95\% of the variance for a given source. In addition, we choose a constant number of PCs instead of the minimum number required to capture 95\% of the variance in order to be able to stack each source's PCA data on top of each other, resulting in a 5000 x 18 matrix. Finally we flatten this matrix, which is our new representation of the batch. We then stack every batch on top of eachother and this serves as the input for our model.  
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/PCA2.png}
+    \caption{PCA-MLP Architecture}
+    \label{fig:pca2}
+\end{figure}   
+
+The data then gets fed through an MLP, each with its own normalization and dropout layers.
+
 
 \section{Experiments}
 \instructions{Results [30\%]: present your results and provide sufficient discussions of the results. 1) Describe what dataset is being used, details in data processing, train-test data split, and hyperparameter choices in your model etc. Provide the sufficient details such that if a reader would like to reproduce your results, they have enough information to do it. 2) Include figures and/or tables showing the quantitative and qualitative performance of your method; 3) Comparison to necessary baseline methods and comparison to your proposed method.} 
 
 \section{Conclusion}
-\instructions{Conclusion [5\%]: Summarize your project and findings. High-level discussion about what you have learned from this project, what works, and what does not work, and ideas/suggestions for future work if you/others want to work on this problem.}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/conclusion1.png}
+    \caption{PCA-MLP Architecture}
+    \label{fig:conclusion1}
+\end{figure}    
+
+In addition, we would like to perform a PCA-CNN model, as we think it would perform much better since it would retain it's 2D structure this way instead of losing it when doing PCA.
+
+
+\instructions{Conclusion [5\%]: Summarize your project and findings. High-level discussion about what you have learned from this project, what works, and what does not work, and ideas/suggestions for future work if you/others want to work on this problem.} 
+
+
 
 \newpage
 \instructions{The following sections do not count towards the 8-Page Limits.}
