@@ -7,8 +7,8 @@
 
 
 % ready for submission
+\PassOptionsToPackage{numbers}{natbib}
 \usepackage[preprint]{neurips_2024}
-
 
 \usepackage[utf8]{inputenc} % allow utf-8 input
 \usepackage[T1]{fontenc}    % use 8-bit T1 fonts
@@ -170,7 +170,7 @@ For this project, a subset of the OpenFWI dataset is used to test the various mo
     \item 5: The number of seismic sources
     \item 1000: The number of timesteps
     \item 70: The number of receivers
-\end{itemize}
+\end{itemize} 
 The data is then preprocessed by normalization for certain models and then splitting the dataset by batch size into training, testing, and validation sets. After the data is processed, it is passed to a model, which outputs a 70 by 70 velocity map. This velocity map is then compared to a ground truth velocity map and metrics are computed. The metrics chosen for analysis are as shown below:
 \begin{figure}[H]
     \centering
