@@ -138,16 +138,15 @@ Please write your abstract here. It should be a snapshot of the entire report.
     Each person has made the following contributions: 
 
     \begin{itemize}
-        \item Harini Gurusankar - 
+        \item Harini Gurusankar - Worked on the Augmented Neural ODE Model.
         \item Ryan Irwandy - Worked on the PCA dimensionality reduction MLP Model. 
-        \item Girish Krishnan -
-        \item Yash Puneet - 
+        \item Girish Krishnan - Worked on the Fourier DeepONet, Residual UNet, and InversionNet + VelocityGAN Models.
+        \item Yash Puneet - Worked on the 2D Fourier Neural Operator Model.
     \end{itemize}
 
-    
-
-
 \section{Related work} 
+
+    We decided to adapt a few models from papers shared in class to be used for the Full Wave Inversion problem such that their performance could be compared with models discussed in the Fourier DeepONet paper \cite{fdonet} that used FWI for evaluation. We used base structures of Augmented Neural ODEs \cite{anode} and \cite{fno} and edited them as described in the Methodology such that they were applicable to our network.
 
     In addition, PCA has been performed before to geographical waveform inversion problems. Specifically in the domain of classifying gas hydrates through a unsupervised neural network model known as Self Organizing Maps (SOM). More specifically, the data's dimensionality is reduced via PCA and then fed into an SOM to cluster different gas hydrates underground \cite{jones2023waveform}.  
 
@@ -203,7 +202,7 @@ One of the models chosen to experiment with was the Neural ODE as learned in the
 
 \subsubsection{2-Dimensional Fourier Neural Operator}
 
-Another model we tried was an adaptation of the Fourier Neural Operator we learned about in class and experimented with in the homework. Since our input seismic data had both spatial and time dimensions and was required to produce a 2-dimensional velocity map, we adapted the Fourier Neural Operator such that it used 2D Fast Fourier Transforms in the spectral convolution.
+Another model we tried was an adaptation of the Fourier Neural Operator \cite{fno} we learned about in class and experimented with in the homework. Since our input seismic data had both spatial and time dimensions and was required to produce a 2-dimensional velocity map, we adapted the Fourier Neural Operator such that it used 2D Fast Fourier Transforms in the spectral convolution.
 
 \begin{figure}[H]
     \centering
@@ -270,7 +269,7 @@ The data then gets fed through an MLP, each with its own normalization and dropo
 For future improvements, we aim to attempt the following with the goal of improving the performance of our project Full Wave Inversion tasks in general as well as in the Kaggle Competition we are submitting to.
 
 \begin{itemize}
-    \item \textbf{Evaluate Performance with Noisy Data} In real world scenarios; clean, noise-free data can not always be expected as an input to a model since this is greatly dependent on sensor quality and environmental conditions, thus a model's robustness when faced with noise plays a major role in its overall performance. The Fourier DeepONet Paper [TODO:Reference] performed similar evaluations with InversionNet, VelocityGAN and Fourier DeepONet finding that the DeepONet retained good performance even with noisy data thus we would be interested in comparing our models using a similar process and tuning each model to be as robust as possible to noisy inputs.
+    \item \textbf{Evaluate Performance with Noisy Data} In real world scenarios; clean, noise-free data can not always be expected as an input to a model since this is greatly dependent on sensor quality and environmental conditions, thus a model's robustness when faced with noise plays a major role in its overall performance. The Fourier DeepONet Paper \cite{fdonet} performed similar evaluations with InversionNet, VelocityGAN and Fourier DeepONet finding that the DeepONet retained good performance even with noisy data thus we would be interested in comparing our models using a similar process and tuning each model to be as robust as possible to noisy inputs.
     \item \textbf{Hyperarameter Tuning and Larger Dataset for Overfitting Prevention} Through a multitude of experiments as described in Section 4, we found that all of our models overfit the training data to varying extents indicating that model performance could be improved with better tuning or more data. Due to hardware resource and time restrictions we trained our models on a very small subset of the FWI Dataset for the purpose of this project and thus would be interested in evaluating our models on the full dataset with better tuned models. We have currently trained only the Fourier DeepONet with the full dataset. 
     \item \textbf{Dimensionality Reduction with more complex models} Dimensionality Reduction with an MLP backbone worked fairly well in our experiments though its performance was not comparable to our more complex models. Seeing the promise of dimensionality reduction however, we are interested in applying this technique with more our complex models as the backbone to see what performance improvements we can see and potentially reduce overfitting. one such implementation is a PCA-CNN model, as we think it would perform much better since it would retain it's 2D structure instead of losing it when doing PCA.
     \begin{figure}[H]
