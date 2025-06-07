@@ -201,6 +201,26 @@ One of the models chosen to experiment with was the Neural ODE as learned in the
     \label{fig:aug-neuralode-mlp}
 \end{figure} 
 
+\subsubsection{2-Dimensional Fourier Neural Operator}
+
+Another model we tried was an adaptation of the Fourier Neural Operator we learned about in class and experimented with in the homework. Since our input seismic data had both spatial and time dimensions and was required to produce a 2-dimensional velocity map, we adapted the Fourier Neural Operator such that it used 2D Fast Fourier Transforms in the spectral convolution.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/FNO2D.png}
+    \caption{2D Fourier Neural Operator}
+    \label{fig:fno-2d}
+\end{figure}
+
+The architecture shown in \textbf{Figure 7} starts of with an 2D convolution based encoder with which takes the Seismic Data and encodes it into 70x70 arrays that can be used to learn the 70x70 velocity map. It then Average pools the data such that we get good feature representation from the original data stream. This is followed by Grid concatenation and Fourier neural operators are fairly sensitive to grid resolution. The grid was chosen to have a step-size of 0.2 to regularize the spatial steps taken by the data. Post concatenation, the data was passed through 4 series of spectral convolutions that performed Fourier transforms on the data,  carried out weighted multiplications and finally an inverse transform to prepare the data for the next block. \textbf{Figure 8} shows the internal structure of a single spectral convolution block. This was implemented with skip connections such that original data was weighted (through separate convolution layers) and added to the spectral outputs. Lastly, the model performs a decoding and projection to produce the velocity map predictions.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/spectralconv2d.png}
+    \caption{Internal Schematic of 2D Spectral Convolution}
+    \label{fig:fno-2d}
+\end{figure}
+
 \subsubsection{PCA-MLP} 
 
 To perform Principal Component Analysis (PCA), one must first normalize the data. The most common method of doing so is via Z-Score Normalization: 
