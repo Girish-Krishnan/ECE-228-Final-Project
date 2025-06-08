@@ -20,7 +20,12 @@
 \usepackage{microtype}      % microtypography
 \usepackage{xcolor}         % colors
 \usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{array}
 \usepackage{float}
+\usepackage{subcaption}
+\usepackage{amstext}
+\usepackage{amsmath}
 \newcommand{\instructions}[1]{{\color{blue} #1}}
 
 \title{Final Project For ECE228 Track Number \# 1}
@@ -39,7 +44,7 @@
   % examples of more authors
   \And
   Girish Krishnan \\
-  \And
+  \AND
   Ryan Irwandy  \\
   \And
   Yash Puneet \\
@@ -72,227 +77,405 @@
 \maketitle
 
 \begin{abstract}
-Please write your abstract here. It should be a snapshot of the entire report.
+    Full-waveform inversion (FWI) converts multi-source seismic gathers into a high-resolution subsurface velocity image, yet conventional optimization workflows remain costly and sensitive to noise.  
+    As our team participates in a Kaggle competition\footnote{Competition link: \url{https://www.kaggle.com/competitions/waveform-inversion}}   dedicated toward solving the FWI problem, we benchmark a diverse set of modern neural operators on a small subset of the \textsc{OpenFWI} dataset (500 shots, five sources, $1000\times70$ time–receiver grid) with the aim of identifying architectures that maximize the accuracy of velocity map predictions.
+    The models considered are the \emph{Fourier DeepONet}, \emph{InversionNet}, \emph{VelocityGAN}, a residual \emph{UNet}, a 2-D \emph{Fourier Neural Operator} (FNO), three variants of \emph{(Augmented) Neural ODEs}, and a lightweight \emph{PCA\,{+}\,MLP} baseline.  
+    All networks are trained end-to-end to predict a $70\times70$ velocity map. Our experiments show that the Fourier DeepONet acheives the best performance, followed by the VelocityGAN and InversionNet, whereas Neural-ODE and PCA baselines trail by an order of magnitude. 
 \end{abstract}
 
 
 %%% BEGIN INSTRUCTIONS %%%
 
 
-\section*{Submission guideline: Please remove THIS section and all the \textcolor{blue}{blue} instructions from your final submission}
-\subsection*{Submission guideline}
-\begin{itemize}
-    \item Please mention the track number at title (\textbf{Track 1}: Reproducing an existing machine learning + physical / engineering / science application paper and implement improvement ideas on top ot it; \textbf{Track 2}: Open-ended project. 
-    \item Please enter the \textbf{Group Number \#} before the first name of the team. You can find your group number in this  \href{https://docs.google.com/spreadsheets/d/1WOi940jN9U6ZHX3xf5tDbw3-igv2bbjXg1W5AETX8cI/edit?usp=sharing}{Google sheet}. 
-    \item Maximum page limit is 8-page except the Appendix and Reference.
-    \item For citing related literature, please use \verb+\cite+ and Bibtex file (bib.bib in the current folder) to manage your citations.
-    \item A good report should include the following:
-    \begin{itemize}
-        \item Introduction, Background and Related Works. What task/problem are you targeting? What are the prior works in tackling this problem and what are their  limitations? What is your contribution to this problem?
-        \item What method do you propose to solve the problem (e.g. data collection/processing, model input/output, model architecture design, loss function design, incorporate physics knowledge etc)? What's new in your approach? What are the technical challenges that you tackled? 
-        \item Validate your proposed method with experiments and compare your model with existing baselines. What hyper-parameters/dataset are you using? How does your approach compared to other methods under a fair comparison setup? Did you use a package or write your own code (for some parts)? It is fine if you use a package, though this means other aspects of your project must be more ambitious.
-        \item Summarize your findings from the project. Highlight your contributions and discuss the limitations. Outlook for future work.
-    \end{itemize}
-    \item As you work on your final project, ensure you start early and plan your tasks effectively. Document each section clearly in your report. Good luck!
-\end{itemize}
+% \section*{Submission guideline: Please remove THIS section and all the \textcolor{blue}{blue} instructions from your final submission}
+% \subsection*{Submission guideline}
+% \begin{itemize}
+%     \item Please mention the track number at title (\textbf{Track 1}: Reproducing an existing machine learning + physical / engineering / science application paper and implement improvement ideas on top ot it; \textbf{Track 2}: Open-ended project. 
+%     \item Please enter the \textbf{Group Number \#} before the first name of the team. You can find your group number in this  \href{https://docs.google.com/spreadsheets/d/1WOi940jN9U6ZHX3xf5tDbw3-igv2bbjXg1W5AETX8cI/edit?usp=sharing}{Google sheet}. 
+%     \item Maximum page limit is 8-page except the Appendix and Reference.
+%     \item For citing related literature, please use \verb+\cite+ and Bibtex file (bib.bib in the current folder) to manage your citations.
+%     \item A good report should include the following:
+%     \begin{itemize}
+%         \item Introduction, Background and Related Works. What task/problem are you targeting? What are the prior works in tackling this problem and what are their  limitations? What is your contribution to this problem?
+%         \item What method do you propose to solve the problem (e.g. data collection/processing, model input/output, model architecture design, loss function design, incorporate physics knowledge etc)? What's new in your approach? What are the technical challenges that you tackled? 
+%         \item Validate your proposed method with experiments and compare your model with existing baselines. What hyper-parameters/dataset are you using? How does your approach compared to other methods under a fair comparison setup? Did you use a package or write your own code (for some parts)? It is fine if you use a package, though this means other aspects of your project must be more ambitious.
+%         \item Summarize your findings from the project. Highlight your contributions and discuss the limitations. Outlook for future work.
+%     \end{itemize}
+%     \item As you work on your final project, ensure you start early and plan your tasks effectively. Document each section clearly in your report. Good luck!
+% \end{itemize}
 
 %%% END INSTRUCTIONS %%%
 
 
 \section{Introduction}
-\instructions{Introduction [10\%]: provide the background and motivation of the problem, and why it is important. Also, include an overview of your project and a brief summary of contributions (listed in bullet points)} 
+% \instructions{Introduction [10\%]: provide the background and motivation of the problem, and why it is important. Also, include an overview of your project and a brief summary of contributions (listed in bullet points)} 
 
-    Geographical Waveform Inversion is a technique for viewing the Earth's subterranean contents. It is performed by using seismic wave generators, such as drills or thumpers, which are then picked up by receivers placed deep underground. More specifically, it is the velocity of the waves is recieved which can be used to generate a corresponding velocity map. Areas marked with high velocities indicate underground materials where seismic waves travel through quickly, and vice versa for areas marked with low velocities. From here, geologists can make inferences and determine the composition of materials underground using this data, which has many practical applications. These include detecting oil deposits, underground stability for urban development, and fault detection for predicting earthquakes. In essence, it is an extremely similar technique to how ultrasound is performed on human bodies, except now done on the Earth.  
+Geological waveform inversion is used to image subsurface structures by analyzing how seismic waves propagate through the Earth. Sources like drills generate waves recorded by receivers (Figure~\ref{fig:intro}), from which we estimate the underground velocity map $c(x, z)$. High velocities suggest dense materials, while low velocities may indicate voids or softer regions. These maps are crucial for oil exploration, infrastructure planning, and earthquake fault detection.
 
-    \begin{figure}[H]
-        \centering
-        \includegraphics[width=0.5\linewidth]{figures/intro2.png}
-        \caption{Velocity Map Formation and its Practical Uses }
-        \label{fig:intro2}
-    \end{figure}
-    
-    Unfortunately, however, the placement of receivers underground poses two glaring issues. First and foremost, it is extremely expensive to do, not too different from the cost and manpower it takes to install underground power lines. Second, placing receivers underground may disrupt the subterranean environment that may need to be carefully preserved based on the context. In a hypothetical example, its possible that waveform inversion may be used to detect underground burrows of moles to predict their population. However, installing receivers may destroy these tunnels as a result \cite{ctbto_waveform}.  
+\vspace{4pt}
+The forward process is modeled by the acoustic wave equation:
+\[
+\nabla^2 p(x, z, t) - \frac{1}{c(x, z)^2} \frac{\partial^2 p(x, z, t)}{\partial t^2} = s(x, z, t)
+\]
+where $p$ is the seismic wavefield and $s$ is the source. Inversion recovers $c(x, z)$ from observed $p$.
 
-    Fortunately, it is possible to install receivers that collect seismic data above ground. They instead capture the reflections of seismic waves to see what is underground, but this method is extremely noisy.   
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\linewidth]{figures/intro1.png}
+    \hfill
+    \includegraphics[width=0.48\linewidth]{figures/intro2.png}
+    \caption{(Left) Surface-seismic acquisition. (Right) High-resolution velocity model inferred from recorded data.}
+    \label{fig:intro}
+\end{figure}
 
-    \begin{figure}[H]
-        \centering
-        \includegraphics[width=0.5\linewidth]{figures/intro1.png}
-        \caption{Collection of Seismic Waveform Data via Above-Ground recievers }
-        \label{fig:intro1}
-    \end{figure}
+While underground receivers offer accurate data, they are costly and disruptive. Surface receivers are cheaper but introduce significant noise. Our work explores learning-based approaches to infer velocity maps from surface seismic data using various neural architectures.
 
-    Our work involves using machine learning methods to predict these velocity maps via data from the seismic waves and receiver reflections using several different models. In this study, we employ the following six machine learning models: 
+We evaluate several models, including Fourier DeepONet, Residual UNet, InversionNet, VelocityGAN, 2D Fourier Neural Operator, Augmented Neural ODEs, and a PCA-based MLP. Fourier DeepONet achieved the best MAE of 59.54~m/s on our testing set, placing us \textbf{591st of 6446 entrants} in the Kaggle competition.
 
-    \begin{itemize}
-        \item Fourier Deep ONet
-        \item Residual UNet 
-        \item InversionNet + VelocityGAN 
-        \item 2D Fourier Neural Operator
-        \item Augmented Neural ODE 
-        \item PCA Dimensionality Reduction
-    \end{itemize}
+\paragraph{Contributions.}
+Brief summary of our contributions (see Appendix for full breakdown):
 
-    Of these models, the best performing was Fourier Deep ONet, which achieved a Mean Absolute Error (MAE) of 59.54 on the validation set. At time of writing we are currently 591th place in a Kaggle competition of approximately \~ 1000 people. 
-
-    Each person has made the following contributions: 
-
-    \begin{itemize}
-        \item Harini Gurusankar - Worked on the Augmented Neural ODE Model.
-        \item Ryan Irwandy - Worked on the PCA dimensionality reduction MLP Model. 
-        \item Girish Krishnan - Worked on the Fourier DeepONet, Residual UNet, and InversionNet + VelocityGAN Models.
-        \item Yash Puneet - Worked on the 2D Fourier Neural Operator Model.
-    \end{itemize}
+\begin{itemize}[leftmargin=1.2em, itemsep=0.4em]
+    \item \textbf{Fourier DeepONet:} Implemented spectral DeepONet with U-Net decoder; best performance on both datasets; evaluated noise robustness. [Girish]
+    \item \textbf{Neural ODEs:} Built MLP and CNN-based Neural ODEs, including augmented variants. [Harini]
+    \item \textbf{VelocityGAN \& InversionNet:} Reproduced and trained both baselines. VelocityGAN performed well; InversionNet overfit. [Girish]
+    \item \textbf{Residual UNet:} Trained deeper UNet variant with skip connections. [Girish]
+    \item \textbf{Fourier Neural Operator:} Adapted 2D FNO; stable but not state-of-the-art. [Yash]
+    \item \textbf{PCA + MLP:} Designed a compact baseline combining PCA with MLP. Motivates future PCA-CNN variants. [Ryan]
+\end{itemize}
 
 \section{Related work} 
+% \instructions{Related works [5\%]: Please review the related work in this area, state the challenges/limitations of the existing methods, and how does your proposed work will help address the prior limitations and/or advance the current state-of-the-art for this problem.}
 
-    We decided to adapt a few models from papers shared in class to be used for the Full Wave Inversion problem such that their performance could be compared with models discussed in the Fourier DeepONet paper \cite{fdonet} that used FWI for evaluation. We used base structures of Augmented Neural ODEs \cite{anode} and \cite{fno} and edited them as described in the Methodology such that they were applicable to our network.
+The state-of-the-art paper for this problem is the Fourier DeepONet paper \cite{fdonet}, which showed that the Fourier DeepONet outperformed baselines such as InversionNet and VelocityGAN. However, this paper does not explore other potential architectures that could be used to solve the FWI problem. We decided to extend the results of this paper and adapt several models from papers shared in class to apply them to FWI, enabling direct performance comparisons with the Fourier DeepONet, InversionNet, and VelocityGAN. We implemented Augmented Neural ODEs \cite{anode} and the 2D Fourier Neural Operators \cite{fno}, and modified them for FWI.
 
-    In addition, PCA has been performed before to geographical waveform inversion problems. Specifically in the domain of classifying gas hydrates through a unsupervised neural network model known as Self Organizing Maps (SOM). More specifically, the data's dimensionality is reduced via PCA and then fed into an SOM to cluster different gas hydrates underground \cite{jones2023waveform}.  
+In addition, PCA has previously been applied to geophysical waveform inversion problems, particularly in the context of classifying gas hydrates using an unsupervised neural network approach known as Self-Organizing Maps (SOM) \cite{jones2023waveform} . In that work, PCA was used to reduce the dimensionality of the input data before passing it to the SOM for clustering subsurface gas hydrate distributions \cite{jones2023waveform}. %, as illustrated in Figure~\ref{fig:related1}.
 
-    \begin{figure}[H]
-        \centering
-        \includegraphics[width=0.5\linewidth]{figures/related1.png}
-        \caption{PCA-SOM to classify Gas Hydrates Underground}
-        \label{fig:related1}
-    \end{figure}
-    
-    However this problem is a classification problem, and our goal is to predict, specifically, velocity data. However PCA still remains a very good way of reducing dimensionality via principal components while still retaining the variability of our dataset.
+% commenting out this figure for now, as it seems pretty useless TBH
 
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=0.5\linewidth]{figures/related1.png}
+%     \caption{PCA-SOM approach for classifying gas hydrates underground \cite{jones2023waveform}.}
+%     \label{fig:related1}
+% \end{figure}
 
-\instructions{Related works [5\%]: Please review the related work in this area, state the challenges/limitations of the existing methods, and how does your proposed work will help address the prior limitations and/or advance the current state-of-the-art for this problem.}
+However, the task in \cite{jones2023waveform} is a classification problem, whereas our objective is to predict continuous velocity maps. Nevertheless, PCA remains an effective method for reducing dimensionality while retaining most of the variance in the dataset.
 
 \section{Methodology}
-\instructions{Method/Approach [40\%]: this should be the main section of your report. Describe your approach, any equation and/or algorithm you developed to solve the problem. This part will be evaluated based on both scientific merit and technical depth.} \\
-For this project, a subset of the OpenFWI dataset is used to test the various models, and the best-performing model is then run on the entire dataset (622 GB) for the Kaggle competition. Initially, seismic data is given with dimensions (500, 5, 1000, 70). The description for each dimension is provided below:
-\begin{itemize}
-    \item 500: The original batch size
-    \item 5: The number of seismic sources
-    \item 1000: The number of timesteps
-    \item 70: The number of receivers
-\end{itemize} 
-The data is then preprocessed by normalization for certain models and then splitting the dataset by batch size into training, testing, and validation sets. After the data is processed, it is passed to a model, which outputs a 70 by 70 velocity map. This velocity map is then compared to a ground truth velocity map and metrics are computed. The metrics chosen for analysis are as shown below:
-\begin{figure}[H]
+% \instructions{Method/Approach [40\%]: this should be the main section of your report. Describe your approach, any equation and/or algorithm you developed to solve the problem. This part will be evaluated based on both scientific merit and technical depth.} \\
+
+\subsection{Dataset}\label{subsec:data}
+\textsc{OpenFWI} is a public, 622\,GB benchmark that gathers multi\-fold synthetic seismic‐to‐velocity pairs generated with finite‐difference forward modelling over a variety of 2-D geological scenarios (e.g.\ \emph{FlatVel}, \emph{CurveVel}, \emph{FlatFault}, \emph{CurveFault}, \emph{Style}) \cite{openfwi2021,openfwi2023}.  Each sample consists of a tensor of raw pressure gathers $\mathbf{s}\!\in\!\mathbb{R}^{5\times1000\times70}$ (five sources, 1000 time steps, 70 receivers) and its corresponding velocity map $v\!\in\!\mathbb{R}^{1\times70\times70}$.  
+For rapid prototyping we curate a \emph{small subset} composed of one 500-sample batch from the categories \texttt{CurveFault\_A}, \texttt{CurveVel\_A}, \texttt{FlatFault\_A}, and \texttt{Style\_A} (2 000 samples in total).  
+After min–max normalization of velocity ($1500$–$4500$\,m/s) and $\log$–amplitude scaling of gathers, the subset is randomly divided 70\% / 20\% / 10\% into training, validation, and test partitions.  
+The best architecture found on this subset is subsequently trained on the \emph{full} OpenFWI corpus and submitted to the Kaggle “Geophysical Waveform Inversion’’ leaderboard.
+
+\subsection{Evaluation metrics}\label{subsec:metrics}
+Model outputs $\hat{v}$ are compared with ground-truth velocity maps $v$ using four complementary criteria that jointly capture absolute error, outlier sensitivity, structural fidelity, and scale\,/\,magnitude awareness using the metrics summarized in Table \ref{tab:metrics}.
+
+\begin{table}
     \centering
-    \includegraphics[width=0.5\linewidth]{figures/eval_metrics.png}
-    \caption{Formulas for chosen metrics}
-    \label{fig:eval-metrics}
-\end{figure}
-\begin{itemize}
-    \item MAE (Mean Absolute Error): This is the base metric for the Kaggle competition.
-    \item RMSE (Root Mean Squared Error): This metric adds penalty to larger errors and provides a holistic view when analyzed along with MAE.
-    \item SSIM (Structure Similarity Index Measure): This metric is used as a quantitative measure to compare the similarities between a predicted and ground truth image.
-    \item L2 Relative Error: This metric is used to measure the difference between predictions and ground truth by accounting for the magnitudes of the values.
-\end{itemize}
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{@{}p{1cm} p{8cm} c@{}}
+    \toprule
+    \textbf{Metric} & \textbf{Description} & \textbf{Formula} \\
+    \midrule
+    MAE & Measures average absolute difference between predicted and ground truth values. Also the primary metric used in the Kaggle competition. & 
+    $\displaystyle \frac{1}{N} \sum_{i=1}^{N} |y_i - \hat{y}_i|$ \\
+    \addlinespace
+    RMSE & Penalizes large errors more than MAE; helpful for evaluating overall accuracy. &
+    $\displaystyle \sqrt{ \frac{1}{N} \sum_{i=1}^{N} (y_i - \hat{y}_i)^2 }$ \\
+    \addlinespace
+    SSIM & Captures perceptual similarity by comparing luminance, contrast, and structure. Useful for assessing structural fidelity. &
+    $\displaystyle \frac{(2\mu_x \mu_y + C_1)(2\sigma_{xy} + C_2)}{(\mu_x^2 + \mu_y^2 + C_1)(\sigma_x^2 + \sigma_y^2 + C_2)}$ \\
+    \addlinespace
+    Relative $\ell_2$ Error & Measures the relative difference scaled by the ground truth magnitude. Provides a normalized global error measure. &
+    $\displaystyle \frac{ \| y - \hat{y} \|_2 }{ \| y \|_2 }$ \\
+    \bottomrule
+    \vspace{0.1em}
+    \end{tabular}
+    \caption{Evaluation metrics used to quantify model performance on velocity map prediction. In the SSIM formula, $\mu_x$ and $\mu_y$ denote the local means of the predicted and ground truth images respectively, $\sigma_x^2$ and $\sigma_y^2$ are their local variances, $\sigma_{xy}$ is the local covariance, and $C_1$, $C_2$ are small constants that stabilize the division to avoid numerical instability.}
+    \label{tab:metrics}
+\end{table}
+
+All metrics are reported on the held-out test split of the subset. For the best-performing model, we also report the MAE on the full OpenFWI dataset, which is used to rank submissions in the Kaggle competition.
+
 \subsection{Models}
-\subsubsection{Neural ODE}
-\begin{figure}[H]
+This section describes the different models we implemented along with their training strategies.
+\subsubsection{Fourier DeepONet}
+
+\begin{figure}
     \centering
-    \includegraphics[width=0.5\linewidth]{figures/neuralode_structure.png}
-    \caption{Augmented Neural ODE General Structure}
-    \label{fig:neuralode_structure}
+    \includegraphics[width=0.8\linewidth]{figures/FDONet.png}
+    \caption{\textbf{Fourier-DeepONet architecture.} 
+    \textbf{(A)} Branch net and trunk net are two linear transformations lifting inputs to high dimensional space. Green circle represents the merger operation which denotes point-wise multiplication. 
+    \textbf{(B)} Fourier layer, adapted from~\cite{li2020fourier}. 
+    \textbf{(C)} U-Fourier layer, adapted from~\cite{wen2022u}. 
+    \textbf{(D)} Projection layer $Q$. 
+    \textbf{(E)} Shapes of outputs $\mathbf{z}_i$ in one channel, $i \in \{0,1,2,3,4\}$.
+    \emph{Source}: \cite{fdonet}.}
+    \label{fig:fdonet}
 \end{figure}
-One of the models chosen to experiment with was the Neural ODE as learned in the course. Neural ODEs are differential equation solvers, with the solver essentially being a black-box. The model can be implemented by using the torchdiffeq package in Python and the function odeint from this package. The structure of this model was a convolutional encoder, a three-layer MLP as the base function, and a decoder to shape the output as a 70 x 70 tensor to compare against the ground truth. Two different Augmented Neural ODEs were also created. One model had the same MLP as a base function and the other had a simple convolutional network as its base. Both models had an augmented dimension of 1. Augmented Neural ODEs were chosen because the augmented dimension helps in cases where an extra dimension is needed so that trajectories do not intersect. As can be seen in \textbf{Figure \ref{fig:neuralode_structure}}, the input seismic data is passed into an encoder and then augmented. This augmented data is passed into the differential equation solver and then decoded into the output velocity map. In \textbf{Figure \ref{fig:aug-neuralode-mlp}}, the more specific structure of the Augmented Neural ODE with the MLP base is illustrated for further information.
-\begin{figure}[H]
+
+Fourier DeepONet models the mapping from seismic observations \(u: \mathbb{R}^{5 \times 1000 \times 70}\) and a dummy parameter \(p\in\mathbb{R}\) to the velocity field \(v:\mathbb{R}^{70\times70}\). It consists of (i) \emph{Branch} network \(\mathcal{B}(u)\in \mathbb{R}^{w\times70\times70}\) implemented as a 2D linear lift, (ii) A \emph{Trunk} network \(\mathcal{T}(p)\in \mathbb{R}^{w\times1\times1}\), a simple MLP that conditions the operator. (iii) Element-wise multiplication \(\mathcal{B}(u)\odot\mathcal{T}(p)\), plus a learnable bias, serves as the input to the decoder.
+
+The decoder consists of (i) Spectral convolution layers (\(\text{FourierConv}_\phi\)) that perform \(\hat v = \mathcal{F}^{-1}(R_\phi \cdot \mathcal{F}(v))\), processing data in Fourier space (ii) U-Fourier blocks that combine spectral convolutions with spatial skip connections via mini U-Nets and (iii) a projection layer \(Q\) that refines the feature maps.
+
+Formally, if \(z_0 = \mathcal{B}(u)\odot\mathcal{T}(p)\), then for \(i=1,\dots,4\):
+\[
+z_i = \text{U-Fourier}\bigl(z_{i-1}\bigr),\quad
+\hat{v} = Q(z_4),
+\]
+where each U-Fourier block is defined as
+\[
+\text{U-Fourier}(z) = \sigma\bigl(\text{Conv}_\text{Fourier}(z) + \text{Ublock}(z)\bigr).
+\]
+Finally, \(\hat v\) is linearly projected to a single-channel velocity field.
+
+This architecture provides a unified latent representation (via branch–trunk conditioning) and achieves expressive approximation power through spectral convolution and multiscale U-blocks. Refer to Figure~\ref{fig:fdonet} for the overall structure.
+
+
+\subsubsection{InversionNet and VelocityGAN}
+
+\begin{figure}
     \centering
-    \includegraphics[width=0.5\linewidth]{figures/augmented_neuralode.png}
-    \caption{Augmented Neural ODE (MLP)}
-    \label{fig:aug-neuralode-mlp}
-\end{figure} 
+    \begin{subfigure}[b]{0.48\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{figures/InversionNet.png}
+      \caption{InversionNet encoder–decoder.}
+      \label{fig:inversionnet_sub}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\linewidth}
+      \centering
+      \includegraphics[width=\linewidth]{figures/VelocityGAN.png}
+      \caption{VelocityGAN: InversionNet used as the generator.}
+      \label{fig:velocitygan_sub}
+    \end{subfigure}
+    \caption{\textbf{(a)} InversionNet architecture: encoder compresses the input seismic cube $(B,5,1000,70)$ via successive conv/deconv layers, culminating in a tanh-activated $70\times70$ velocity map. \textbf{(b)} VelocityGAN setup: InversionNet serves as the generator $G$, and a patch-based CNN acts as discriminator $D$. The generator minimizes adversarial loss plus an $L_1$ term weighted by $\lambda$, while $D$ learns to distinguish real from generated maps.}
+    \label{fig:inversion_velocitygan}
+  \end{figure}
+  
+  Our implementation follows the LANL InversionNet design ~\cite{inversionnet, velocitygan}, employing a deep CNN encoder-decoder (Fig.~\ref{fig:inversionnet_sub}). The encoder maps the 3D seismic input to a compact bottleneck, and the decoder expands it to a $70\times70$ velocity map with Tanh activation in order to match the velocity range scaled to [-1,1]. In VelocityGAN, the same InversionNet functions as the generator $G$, paired with a CNN discriminator $D$ that outputs patch-wise real/fake scores (Fig.~\ref{fig:velocitygan_sub}).
+  
+  The generator is trained with a combined loss:
+  \[
+  \mathcal{L}_G = \mathrm{BCE}\bigl(D(G(s)),\,\mathbf{1}\bigr) + \lambda\,\lVert G(s) - v\rVert_1,
+  \]
+  where $\lambda = 100$ scales the MAE regularization, and the discriminator minimizes
+  \[
+  \mathcal{L}_D = \tfrac{1}{2}\bigl[\mathrm{BCE}(D(v),\,\mathbf{1}) + \mathrm{BCE}(D(G(s)),\,\mathbf{0})\bigr].
+  \]
+  This adversarial setup encourages the generator to produce velocity maps that are both accurate and structurally realistic.  
+
+
+
+\subsubsection{Residual UNet}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{figures/ResidualUNet.png}
+    \caption{Residual UNet architecture for seismic-to-velocity inversion. The network uses an encoder to compress the input seismic cube into latent features and a decoder with symmetric up-sampling paths that leverage skip connections. Residual blocks ensure stable gradient flow and enable training of deeper architectures.}
+    \label{fig:residual_unet}
+\end{figure}
+
+Residual UNet adapts the widely used U-Net~\cite{ronneberger2015u} by integrating residual connections from ResNet~\cite{he2016deep} into each convolutional block. As shown in Figure~\ref{fig:residual_unet}, the network comprises a down-sampling path that applies multiple \emph{ResidualDoubleConv} modules to encode the 5×1000×70 seismic input into a lower-dimensional latent representation. In the up-sampling path, each decoder block receives concatenated features from its encoder counterpart via skip connections, followed by residual up-convolution to reconstruct a 70×70 velocity map.
+
+Formally, each residual block computes:
+\[
+\mathbf{y} = \sigma\bigl(\mathrm{BN}(W_2 * \sigma(\mathrm{BN}(W_1 * \mathbf{x}))) + \mathcal{S}(\mathbf{x})\bigr),
+\]
+where \( * \) denotes convolution, \(\mathrm{BN}\) denotes batch normalization, \(\sigma\) is ReLU, and \(\mathcal{S}\) is either identity or a learned linear shortcut. These shortcuts enable smoother gradient propagation through the network.
+
+Several top-performing competitors in the Kaggle competition employ similar architectures, primarily due to the network's ability to capture fine structural details while maintaining global context.
+
+\subsubsection{Neural ODE}
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.47\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/neuralode_structure.png}
+        \caption{General structure}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.47\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/augmented_neuralode.png}
+        \caption{Augmented MLP base}
+    \end{subfigure}
+    \caption{Augmented Neural ODE architectures. (a) shows the general structure, where input seismic data is encoded, augmented, solved via ODE integration, and decoded to produce the velocity map. (b) shows the specific Augmented Neural ODE model using an MLP base function.}
+    \label{fig:neuralode-merged}
+\end{figure}
+
+One of the models chosen to experiment with was the Neural ODE as learned in the course. Neural ODEs are differential equation solvers, with the solver essentially being a black box. The model can be implemented by using the \texttt{torchdiffeq} package in Python and the function \texttt{odeint} from this package. The structure of this model was a convolutional encoder, a three-layer MLP as the base function, and a decoder to shape the output as a 70×70 tensor to compare against the ground truth. 
+
+Two different Augmented Neural ODEs were also created. One model had the same MLP as a base function and the other had a simple convolutional network as its base. Both models had an augmented dimension of 1. Augmented Neural ODEs were chosen because the augmented dimension helps in cases where an extra dimension is needed so that trajectories do not intersect.
+
+As illustrated in \textbf{Figure~\ref{fig:neuralode-merged}}, the input seismic data is passed into an encoder and then augmented. This augmented data is passed into the differential equation solver and then decoded into the output velocity map. Subfigure (b) in particular shows the more specific structure of the Augmented Neural ODE with an MLP base.
+
 
 \subsubsection{2-Dimensional Fourier Neural Operator}
 
 Another model we tried was an adaptation of the Fourier Neural Operator \cite{fno} we learned about in class and experimented with in the homework. Since our input seismic data had both spatial and time dimensions and was required to produce a 2-dimensional velocity map, we adapted the Fourier Neural Operator such that it used 2D Fast Fourier Transforms in the spectral convolution.
 
-\begin{figure}[H]
+The architecture shown in \textbf{Figure \ref{fig:fno-2d}} starts off with a 2D convolution-based encoder that takes the seismic data and encodes it into 70×70 arrays used to learn the velocity map. It then average-pools the data to extract representative features from the original data stream. This is followed by grid concatenation; Fourier neural operators are fairly sensitive to grid resolution. The grid was chosen to have a step size of 0.2 to regularize the spatial steps taken by the data. Post concatenation, the data was passed through four series of spectral convolutions that perform Fourier transforms on the data, carry out weighted multiplications, and finally apply an inverse transform to prepare the data for the next block. \textbf{Figure \ref{fig:fno-2d}}(b) shows the internal structure of a single spectral convolution block. This was implemented with skip connections such that original data was weighted (through separate convolution layers) and added to the spectral outputs. Lastly, the model performs a decoding and projection to produce the velocity map predictions.
+
+\begin{figure}
     \centering
-    \includegraphics[width=0.5\linewidth]{figures/FNO2D.png}
-    \caption{2D Fourier Neural Operator}
+    \begin{subfigure}[b]{0.6\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/FNO2D.png}
+        \caption{2D Fourier Neural Operator}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/spectralconv2d.png}
+        \caption{Spectral Convolution Block}
+    \end{subfigure}
+    \caption{(a) Full 2D Fourier Neural Operator architecture used in our experiments. (b) Internal schematic of the spectral convolution block.}
     \label{fig:fno-2d}
 \end{figure}
 
-The architecture shown in \textbf{Figure \ref{fig:fno-2d}} starts of with an 2D convolution based encoder with which takes the Seismic Data and encodes it into 70x70 arrays that can be used to learn the 70x70 velocity map. It then Average pools the data such that we get good feature representation from the original data stream. This is followed by Grid concatenation and Fourier neural operators are fairly sensitive to grid resolution. The grid was chosen to have a step-size of 0.2 to regularize the spatial steps taken by the data. Post concatenation, the data was passed through 4 series of spectral convolutions that performed Fourier transforms on the data,  carried out weighted multiplications and finally an inverse transform to prepare the data for the next block. \textbf{Figure \ref{fig:spec-conv}} shows the internal structure of a single spectral convolution block. This was implemented with skip connections such that original data was weighted (through separate convolution layers) and added to the spectral outputs. Lastly, the model performs a decoding and projection to produce the velocity map predictions.
+\subsubsection{Principal Component Analysis (PCA) along with MLP} 
 
-\begin{figure}[H]
+To perform Principal Component Analysis (PCA), one must first normalize the data. The most common method of doing so is via Z-score normalization $(x - \mu)/\sigma$, where $\mu$ is the mean, $\sigma$ is the standard deviation, and $x$ is the data point. The reason for normalizing the data is so that features with inherently larger magnitudes do not overshadow those with smaller magnitudes. For example, the number of molecules in a human is several orders of magnitude larger than human height in inches.
+
+After normalization, we perform PCA by calculating the eigenvectors of the covariance matrix, which represent the principal components. Each principal component (PC) is an eigenvector that captures a direction of maximum variance in the data and is orthogonal to the previous PCs. The weights associated with each PC are known as loading scores and indicate how much a PC accounts for variability in the dataset. The PCs now act as the new dependent variables instead of our original features.
+
+\begin{figure}
     \centering
-    \includegraphics[width=0.5\linewidth]{figures/spectralconv2d.png}
-    \caption{Internal Schematic of 2D Spectral Convolution}
-    \label{fig:spec-conv}
+    \begin{subfigure}[b]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/PCA1.png}
+        \caption{PCA Data Preparation}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/PCA2.png}
+        \caption{PCA-MLP Architecture}
+    \end{subfigure}
+    \caption{(a) Seismic waveform data reshaped and reduced via PCA. (b) MLP model applied to PCA-transformed data.}
+    \label{fig:pca}
 \end{figure}
 
-\subsubsection{PCA-MLP} 
+PCA is performed on the seismic waveform dataset by first taking a single batch with dimensions $5 \times 1000 \times 70$. We then extract each source individually, resulting in a $1000 \times 70$ matrix where each column represents a given receiver. Because of the large number of receivers, we aim to reduce this dimension since many may provide redundant data. We reduce this from 70 receivers to 18 principal components. Empirical testing showed that 18 PCs consistently captured about 95\% of the variance for each source. To allow consistent stacking of all sources, we use a fixed number of PCs rather than selecting the minimum needed per source. This results in a $5000 \times 18$ matrix, which is flattened into a single feature vector per batch. All batches are stacked to form the full dataset, which serves as input to the model.
 
-To perform Principal Component Analysis (PCA), one must first normalize the data. The most common method of doing so is via Z-Score Normalization: 
- \\
- \\$\frac{x-\mu}{\sigma}$ \\
- \\$\mu$ = Mean\\  
- \\$\sigma$ = Standard Deviation\\ 
- \\$x$ = Datapoint\\ 
- \\ 
-The reason for normalizing the data is so features with inherently larger magnitudes do not overshadow those with smaller magnitudes. An example of this is contrasting the number of molecules in a human which is several orders of magnitude larger than human height in inches. 
-
-After performing normalization, we perform PCA analysis by calculating the eigenvectors of the following formula: 
- \\ 
- \\$CV=LV$\\
- \\$C$ = Covariance Matrix\\  
- \\$V$ = Eigenvectors (Principal Components)\\ 
- \\$L$ = Eigenvalues (Loading Scores)\\ 
- \\  
-Where $C$ represents the matrix of covariances of each feature against each other, while $L$ and $C$ represent the loading scores and principal components respectively. 
-
-The principal components are computed by calculating an eigenvector of "best fit" that goes through all datapoints represented by $n$ features. The number of eigenvectors calculated is usually up to the number of eigenvectors that describes 95\% of the variability in the dataset as described by the loading scores. Each eigenvector will be perpendicular to the last. The weights that make up an principal component (PC) are known as loading scores, and describe how much a given PC accounts for the variability in a dataset. The PCs now act as the new dependent variables instead of our features.
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.5\linewidth]{figures/PCA1.png}
-    \caption{PCA Data Preparation}
-    \label{fig:pca1}
-\end{figure}  
-PCA is performed on the seismic waveform dataset by first taking a single batch, which is of dimensions 5 x 1000 x 70. We then further subdivide the data for each source, resulting in a 1000 x 70 matrix where each column represents a given receiver. Because there are so many receivers, we would like to reduce this dimension since its possible that they may be providing redundant data. We reduce this dimension from 70 receivers to 18 PCs. This is partially explained by empirical testing that showed that 18 PCs regularly captured 95\% of the variance for a given source. In addition, we choose a constant number of PCs instead of the minimum number required to capture 95\% of the variance in order to be able to stack each source's PCA data on top of each other, resulting in a 5000 x 18 matrix. Finally we flatten this matrix, which is our new representation of the batch. We then stack every batch on top of eachother and this serves as the input for our model.  
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.5\linewidth]{figures/PCA2.png}
-    \caption{PCA-MLP Architecture}
-    \label{fig:pca2}
-\end{figure}   
-
-The data then gets fed through an MLP, each with its own normalization and dropout layers.
-
+The transformed data is then passed through a multi-layer perceptron (MLP), with normalization and dropout applied to each layer.
 
 \section{Experiments}
 \instructions{Results [30\%]: present your results and provide sufficient discussions of the results. 1) Describe what dataset is being used, details in data processing, train-test data split, and hyperparameter choices in your model etc. Provide the sufficient details such that if a reader would like to reproduce your results, they have enough information to do it. 2) Include figures and/or tables showing the quantitative and qualitative performance of your method; 3) Comparison to necessary baseline methods and comparison to your proposed method.} 
 
 \section{Conclusion}
+% \instructions{Conclusion [5\%]: Summarize your project and findings. High-level discussion about what you have learned from this project, what works, and what does not work, and ideas/suggestions for future work if you/others want to work on this problem.} 
 
-\subsubsection{Future Work}
+\subsection{Summary and Key Insights}
 
-For future improvements, we aim to attempt the following with the goal of improving the performance of our project Full Wave Inversion tasks in general as well as in the Kaggle Competition we are submitting to.
+This project investigated a variety of data-driven models for seismic-to-velocity inversion. We implemented baseline architectures (InversionNet, VelocityGAN, Residual UNet), advanced neural operators (Fourier DeepONet, FNO), and a PCA-MLP dimensionality reduction pipeline. Among these, the Fourier DeepONet achieved the lowest test error on the Kaggle competition set when trained on the full OpenFWI dataset. Architectures that preserved spatial structure and captured long-range correlations consistently outperformed simpler MLP-based models.
 
-\begin{itemize}
-    \item \textbf{Evaluate Performance with Noisy Data} In real world scenarios; clean, noise-free data can not always be expected as an input to a model since this is greatly dependent on sensor quality and environmental conditions, thus a model's robustness when faced with noise plays a major role in its overall performance. The Fourier DeepONet Paper \cite{fdonet} performed similar evaluations with InversionNet, VelocityGAN and Fourier DeepONet finding that the DeepONet retained good performance even with noisy data thus we would be interested in comparing our models using a similar process and tuning each model to be as robust as possible to noisy inputs.
-    \item \textbf{Hyperarameter Tuning and Larger Dataset for Overfitting Prevention} Through a multitude of experiments as described in Section 4, we found that all of our models overfit the training data to varying extents indicating that model performance could be improved with better tuning or more data. Due to hardware resource and time restrictions we trained our models on a very small subset of the FWI Dataset for the purpose of this project and thus would be interested in evaluating our models on the full dataset with better tuned models. We have currently trained only the Fourier DeepONet with the full dataset. 
-    \item \textbf{Dimensionality Reduction with more complex models} Dimensionality Reduction with an MLP backbone worked fairly well in our experiments though its performance was not comparable to our more complex models. Seeing the promise of dimensionality reduction however, we are interested in applying this technique with more our complex models as the backbone to see what performance improvements we can see and potentially reduce overfitting. one such implementation is a PCA-CNN model, as we think it would perform much better since it would retain it's 2D structure instead of losing it when doing PCA.
-    \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.5\linewidth]{figures/conclusion1.png}
-    \caption{PCA-MLP Architecture}
-    \label{fig:conclusion1}
-    \end{figure} 
+\subsection{What Worked and What Did Not}
+
+Convolutional and operator-based models like UNet, DeepONet, and FNO were the most effective, as they leveraged spatial continuity and hierarchical features. Lightweight models like PCA-MLP were fast but less accurate due to loss of spatial information. Training on the reduced Kaggle subset led to frequent overfitting, indicating the need for larger-scale data or better regularization.
+
+\subsection{Future Directions}
+
+Future work can focus on three areas:
+\begin{itemize}[leftmargin=*, itemsep=1pt, topsep=2pt]
+    \item \textbf{Noise Robustness:} Evaluate model stability under input perturbations to simulate real-world sensor noise, following findings in \cite{fdonet}.
+    \item \textbf{Full-Scale Training:} Extend training of all models to the full OpenFWI dataset. Currently, only the Fourier DeepONet has been fully scaled.
+    \item \textbf{Dimensionality Reduction with Stronger Backbones:} Replace the MLP in PCA-MLP with spatially-aware architectures like CNNs. Figure~\ref{fig:conclusion1} illustrates this proposed PCA-CNN pipeline.
 \end{itemize}
 
-
-\instructions{Conclusion [5\%]: Summarize your project and findings. High-level discussion about what you have learned from this project, what works, and what does not work, and ideas/suggestions for future work if you/others want to work on this problem.} 
-
-
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{figures/conclusion1.png}
+    \caption{Proposed PCA-CNN architecture combining dimensionality reduction with a convolutional backbone.}
+    \label{fig:conclusion1}
+\end{figure}
 
 \newpage
-\instructions{The following sections do not count towards the 8-Page Limits.}
+% \instructions{The following sections do not count towards the 8-Page Limits.}
 \section*{Appendix}
-\subsection*{Github Link}
-\instructions{Github Link [10\%]. Include a Link to your Project Github with your project codes with necessary documentation. Please include a top-level README.md file in your github repo. This top-level README should explain the layout of this repository and instructions such that users can run your code. Ensure your code can run and reproduce the results you presented in the report. Note that it is your responsibility to ensure that the code repo is working and the README.md is clear to follow.}
+\subsection*{GitHub Link}
+% \instructions{Github Link [10\%]. Include a Link to your Project Github with your project codes with necessary documentation. Please include a top-level README.md file in your github repo. This top-level README should explain the layout of this repository and instructions such that users can run your code. Ensure your code can run and reproduce the results you presented in the report. Note that it is your responsibility to ensure that the code repo is working and the README.md is clear to follow.}
+
+The link to our GitHub repository is as follows: \url{https://github.com/Girish-Krishnan/ECE-228-Final-Project/tree/main}. 
+
+This repo contains all the code used to run our models, including the data preprocessing, model training, and evaluation scripts. The \texttt{README.md} file provides detailed instructions on how to set up the environment, install dependencies, and run the code to reproduce our results.
 
 \subsection*{Team Member Contribution}
-\instructions{Describing each team member's contribution for this project (e.g., conceptualization, Data curation, Methodology, Software/Experiments, Report Writing, Poster preparation, etc)} 
+% \instructions{Describing each team member's contribution for this project (e.g., conceptualization, Data curation, Methodology, Software/Experiments, Report Writing, Poster preparation, etc)} 
+Table \ref{tab:team_contrib} summarizes the contributions of each team member to the project. The goal was to have each team member implement at least 1-2 different model architectures so that we have several different models to compare against each other. The team members were also responsible for writing the report and poster sections that corresponded to their model implementations.
+
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.4}
+    \setlist[itemize]{leftmargin=1.5em, topsep=2pt, itemsep=1pt}
+    \begin{tabular}{p{3.5cm} p{11cm}}
+        \toprule
+        \textbf{Member} & \textbf{Key Contributions} \\
+        \midrule
+
+        \textbf{Harini Gurusankar} &
+        \begin{itemize}
+            \item Designed the baseline \emph{Neural ODE} and \emph{Augmented Neural ODE} models.
+            \item Implemented MLP and CNN-based ODE variants in PyTorch.
+            \item Wrote the methodology subsection and results discussion for ODE models.
+            \item Contributed methodology content to the poster and presented it.
+        \end{itemize} \\
+
+        \textbf{Girish Krishnan} &
+        \begin{itemize}
+            \item Coordinated the project and designed the experimental pipeline.
+            \item Implemented \emph{Fourier DeepONet}, residual \emph{UNet}, \emph{InversionNet}, and \emph{VelocityGAN}.
+            \item Trained and submitted full-data DeepONet (best MAE: 59.5 m/s).
+            \item Created metric visualizations (bar charts, heatmaps, radar plots).
+            \item Wrote the abstract and results sections.
+            \item Designed and presented the results section of the poster.
+        \end{itemize} \\
+
+        \textbf{Ryan Irwandy} &
+        \begin{itemize}
+            \item Developed the PCA-based baseline and accompanying MLP model.
+            \item Wrote PCA utilities and normalization scripts.
+            \item Ran experiments on component counts and dropout strategies.
+            \item Wrote parts of the related work and methodology sections.
+            \item Created and presented the poster’s introduction and PCA baseline sections.
+        \end{itemize} \\
+
+        \textbf{Yash Puneet} &
+        \begin{itemize}
+            \item Implemented the 2-D \emph{Fourier Neural Operator} with spectral blocks.
+            \item Tuned mode counts and channel widths via hyperparameter sweeps.
+            \item Created architecture figures for the FNO section.
+            \item Wrote FNO-related work, methodology, and future work sections.
+            \item Designed and presented the related work and future work sections of the poster.
+        \end{itemize} \\
+
+        \bottomrule
+    \end{tabular}
+    \caption{Summary of individual contributions to the project.}
+    \label{tab:team_contrib}
+\end{table}
+
+
+\subsection*{Confirmation of Teaching Evaluation Submission}
+
+Our team confirms that we have submitted our teaching evaluation for the ECE 228 course and the teaching assistant evaluations. Here are screenshots that confirm our submission:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.49\linewidth]{figures/teaching_evaluations/instructor_eval.png}
+    \includegraphics[width=0.49\linewidth]{figures/teaching_evaluations/ta_eval.png}
+    \includegraphics[width=\linewidth]{figures/teaching_evaluations/set_eval.png}
+    \caption{Teaching Evaluation Submission Confirmation}
+    \label{fig:teaching_evaluation}
+\end{figure}
+
+Thanks for teaching us this awesome course!
+
 
 \bibliography{bib}
 \bibliographystyle{abbrvnat}
