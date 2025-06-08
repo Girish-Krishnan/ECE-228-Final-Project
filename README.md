@@ -7,11 +7,9 @@
 |![](./media/poster.png)|![](./media/team.png)|
 |---|---|
 
-<div style="text-align: center;">
-   <a href="https://docs.google.com/presentation/d/1wfly51wmukF_M-mXVlJaRHG03IYZg2LK1fLiKip6Jt8/edit?usp=sharing" target="_blank">
+<center><a href="https://docs.google.com/presentation/d/1wfly51wmukF_M-mXVlJaRHG03IYZg2LK1fLiKip6Jt8/edit?usp=sharing" target="_blank">
       Click here to view the poster!
-   </a>
-</div>
+   </a></center>
 
 ---
 
