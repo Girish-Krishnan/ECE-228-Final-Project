@@ -187,31 +187,27 @@ This section describes the different models we implemented along with their trai
     \centering
     \includegraphics[width=0.6\linewidth]{figures/FDONet.png}
     \caption{\textbf{Fourier-DeepONet architecture.} 
-    \textbf{(A)} Branch net and trunk net are two linear transformations lifting inputs to high dimensional space. Green circle represents the merger operation which denotes point-wise multiplication. 
-    \textbf{(B)} Fourier layer, adapted from~\cite{li2020fourier}. 
-    \textbf{(C)} U-Fourier layer, adapted from~\cite{wen2022u}. 
+    \textbf{(A)} Branch $\mathcal{B}$ and trunk $\mathcal{T}$ networks lift inputs to latent space; merger denotes pointwise multiplication. 
+    \textbf{(B)} Fourier layer~\cite{li2020fourier}. 
+    \textbf{(C)} U-Fourier block~\cite{wen2022u}. 
     \textbf{(D)} Projection layer $Q$. 
-    \textbf{(E)} Shapes of outputs $\mathbf{z}_i$ in one channel, $i \in \{0,1,2,3,4\}$.
-    \emph{Source}: \cite{fdonet}.}
+    \textbf{(E)} Feature maps $\mathbf{z}_i$, $i=0,\dots,4$. \emph{Source}:~\cite{fdonet}.}
     \label{fig:fdonet}
 \end{figure}
 
-Fourier DeepONet models the mapping from seismic observations \(u: \mathbb{R}^{5 \times 1000 \times 70}\) and a dummy parameter \(p\in\mathbb{R}\) to the velocity field \(v:\mathbb{R}^{70\times70}\). It consists of (i) \emph{Branch} network \(\mathcal{B}(u)\in \mathbb{R}^{w\times70\times70}\) implemented as a 2D linear lift, (ii) A \emph{Trunk} network \(\mathcal{T}(p)\in \mathbb{R}^{w\times1\times1}\), a simple MLP that conditions the operator. (iii) Element-wise multiplication \(\mathcal{B}(u)\odot\mathcal{T}(p)\), plus a learnable bias, serves as the input to the decoder.
+\textbf{Fourier DeepONet (F-DONet)} maps input seismic data \(u\in\mathbb{R}^{5\times1000\times70}\) and dummy parameter \(p\in\mathbb{R}\) to velocity fields \(v\in\mathbb{R}^{70\times70}\). The \emph{branch} net \(\mathcal{B}(u)\in \mathbb{R}^{w\times70\times70}\) and \emph{trunk} net \(\mathcal{T}(p)\in \mathbb{R}^{w\times1\times1}\) are combined via element-wise product with bias to yield \(z_0 = \mathcal{B}(u)\odot \mathcal{T}(p)\).
 
-The decoder consists of (i) Spectral convolution layers (\(\text{FourierConv}_\phi\)) that perform \(\hat v = \mathcal{F}^{-1}(R_\phi \cdot \mathcal{F}(v))\), processing data in Fourier space (ii) U-Fourier blocks that combine spectral convolutions with spatial skip connections via mini U-Nets and (iii) a projection layer \(Q\) that refines the feature maps.
-
-Formally, if \(z_0 = \mathcal{B}(u)\odot\mathcal{T}(p)\), then for \(i=1,\dots,4\):
+The decoder applies four stacked U-Fourier blocks followed by projection:
 \[
-z_i = \text{U-Fourier}\bigl(z_{i-1}\bigr),\quad
-\hat{v} = Q(z_4),
+z_i = \text{U-Fourier}(z_{i-1}),\quad \hat{v} = Q(z_4),
 \]
-where each U-Fourier block is defined as
+where each U-Fourier block performs:
 \[
-\text{U-Fourier}(z) = \sigma\bigl(\text{Conv}_\text{Fourier}(z) + \text{Ublock}(z)\bigr).
+\text{U-Fourier}(z) = \sigma\bigl(\text{FourierConv}(z) + \text{Ublock}(z)\bigr).
 \]
-Finally, \(\hat v\) is linearly projected to a single-channel velocity field.
+Here, \(\text{FourierConv}(z) = \mathcal{F}^{-1}(R_\phi \cdot \mathcal{F}(z))\), with \(\mathcal{F}\) denoting the 2D FFT. 
 
-This architecture provides a unified latent representation (via branch–trunk conditioning) and achieves expressive approximation power through spectral convolution and multiscale U-blocks. Refer to Figure~\ref{fig:fdonet} for the overall structure.
+F-DONet thus combines latent conditioning with multiscale spectral processing for efficient operator learning. See Figure~\ref{fig:fdonet} for an overview.
 
 
 \subsection{InversionNet and VelocityGAN}
@@ -219,35 +215,32 @@ This architecture provides a unified latent representation (via branch–trunk c
 \begin{figure}
     \centering
     \begin{subfigure}[b]{0.48\linewidth}
-      \centering
       \includegraphics[width=\linewidth]{figures/InversionNet.png}
-      \caption{InversionNet encoder–decoder.}
+      \caption{InversionNet encoder-decoder.}
       \label{fig:inversionnet_sub}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\linewidth}
-      \centering
       \includegraphics[width=\linewidth]{figures/VelocityGAN.png}
-      \caption{VelocityGAN: InversionNet used as the generator.}
+      \caption{VelocityGAN architecture.}
       \label{fig:velocitygan_sub}
     \end{subfigure}
-    \caption{\textbf{(a)} InversionNet architecture: encoder compresses the input seismic cube $(B,5,1000,70)$ via successive conv/deconv layers, culminating in a tanh-activated $70\times70$ velocity map. \textbf{(b)} VelocityGAN setup: InversionNet serves as the generator $G$, and a patch-based CNN acts as discriminator $D$. The generator minimizes adversarial loss plus an $L_1$ term weighted by $\lambda$, while $D$ learns to distinguish real from generated maps.}
+    \caption{\textbf{(a)} InversionNet: 3D seismic input \((B,5,1000,70)\) is compressed via conv layers and decoded into a Tanh-activated \(70\times70\) velocity map. 
+    \textbf{(b)} VelocityGAN: InversionNet serves as generator \(G\), paired with patch-wise CNN discriminator \(D\).}
     \label{fig:inversion_velocitygan}
-  \end{figure}
-  
-  Our implementation follows the LANL InversionNet design ~\cite{inversionnet, velocitygan}, employing a deep CNN encoder-decoder (Fig.~\ref{fig:inversionnet_sub}). The encoder maps the 3D seismic input to a compact bottleneck, and the decoder expands it to a $70\times70$ velocity map with Tanh activation in order to match the velocity range scaled to [-1,1]. In VelocityGAN, the same InversionNet functions as the generator $G$, paired with a CNN discriminator $D$ that outputs patch-wise real/fake scores (Fig.~\ref{fig:velocitygan_sub}).
-  
-  The generator is trained with a combined loss:
-  \[
-  \mathcal{L}_G = \mathrm{BCE}\bigl(D(G(s)),\,\mathbf{1}\bigr) + \lambda\,\lVert G(s) - v\rVert_1,
-  \]
-  where $\lambda = 100$ scales the MAE regularization, and the discriminator minimizes
-  \[
-  \mathcal{L}_D = \tfrac{1}{2}\bigl[\mathrm{BCE}(D(v),\,\mathbf{1}) + \mathrm{BCE}(D(G(s)),\,\mathbf{0})\bigr].
-  \]
-  This adversarial setup encourages the generator to produce velocity maps that are both accurate and structurally realistic.  
+\end{figure}
 
+\textbf{InversionNet}~\cite{inversionnet} is a CNN-based encoder-decoder that maps seismic inputs to velocity maps (Fig.~\ref{fig:inversionnet_sub}). The encoder compresses the \(5\times1000\times70\) input into a latent code, which the decoder upsamples to a \(70\times70\) output using Tanh to match the normalized velocity range.
 
+\textbf{VelocityGAN}~\cite{velocitygan} extends InversionNet by using it as a generator \(G\) in a conditional GAN framework (Fig.~\ref{fig:velocitygan_sub}). A discriminator \(D\) assigns patch-wise real/fake scores. The generator minimizes:
+\[
+\mathcal{L}_G = \mathrm{BCE}(D(G(s)),\,\mathbf{1}) + \lambda \lVert G(s) - v \rVert_1,
+\]
+where \(\lambda=100\) weights the \(L_1\) loss. The discriminator loss is:
+\[
+\mathcal{L}_D = \tfrac{1}{2}\bigl[\mathrm{BCE}(D(v),\,\mathbf{1}) + \mathrm{BCE}(D(G(s)),\,\mathbf{0})\bigr].
+\]
+This setup balances adversarial training with pixel-wise fidelity, encouraging realistic velocity map generation.
 
 \subsection{Residual UNet}
 
@@ -260,13 +253,7 @@ This architecture provides a unified latent representation (via branch–trunk c
 
 Residual UNet adapts the widely used U-Net~\cite{ronneberger2015u} by integrating residual connections from ResNet~\cite{he2016deep} into each convolutional block. As shown in Figure~\ref{fig:residual_unet}, the network comprises a down-sampling path that applies multiple \emph{ResidualDoubleConv} modules to encode the 5×1000×70 seismic input into a lower-dimensional latent representation. In the up-sampling path, each decoder block receives concatenated features from its encoder counterpart via skip connections, followed by residual up-convolution to reconstruct a 70×70 velocity map.
 
-Formally, each residual block computes:
-\[
-\mathbf{y} = \sigma\bigl(\mathrm{BN}(W_2 * \sigma(\mathrm{BN}(W_1 * \mathbf{x}))) + \mathcal{S}(\mathbf{x})\bigr),
-\]
-where \( * \) denotes convolution, \(\mathrm{BN}\) denotes batch normalization, \(\sigma\) is ReLU, and \(\mathcal{S}\) is either identity or a learned linear shortcut. These shortcuts enable smoother gradient propagation through the network.
-
-Several top-performing competitors in the Kaggle competition employ similar architectures, primarily due to the network's ability to capture fine structural details while maintaining global context.
+Formally, each residual block computes: $\mathbf{y} = \sigma\bigl(\mathrm{BN}(W_2 * \sigma(\mathrm{BN}(W_1 * \mathbf{x}))) + \mathcal{S}(\mathbf{x})\bigr)$, where \( * \) denotes convolution, \(\mathrm{BN}\) denotes batch normalization, \(\sigma\) is ReLU, and \(\mathcal{S}\) is either identity or a learned linear shortcut. These shortcuts enable smoother gradient propagation through the network.
 
 \subsection{Neural ODE}
 \begin{figure}
@@ -290,13 +277,7 @@ A Neural ODE treats depth as continuous.
 A conv-encoder $E$ maps the seismic cube $u\!\in\!\mathbb R^{5\times1000\times70}$ to an
 initial latent $z_0\in\mathbb R^{d}$.
 Latent evolution is defined by a time-invariant vector field
-$f_\theta$ (3-layer MLP)
-
-\[
-\dot z(t)=f_\theta\!\bigl(z(t)\bigr),\qquad z(0)=z_0,
-\]
-
-integrated with \texttt{odeint} (\texttt{torchdiffeq}).
+$f_\theta$ (3-layer MLP) via the ODE: $\dot z(t)=f_\theta\!\bigl(z(t)\bigr),\qquad z(0)=z_0$, integrated with \texttt{odeint} (\texttt{torchdiffeq}).
 The terminal state $z(1)$ is decoded by a transposed-conv head
 $D:\mathbb R^{d}\!\to\!\mathbb R^{1\times70\times70}$,
 yielding $\hat v=D\!\bigl(z(1)\bigr)$
@@ -370,13 +351,13 @@ before spatial structure must be learned end-to-end.
 
 \begin{figure}
     \centering
-    \begin{subfigure}[b]{0.45\linewidth}
+    \begin{subfigure}[b]{0.4\linewidth}
         \centering
         \includegraphics[width=\linewidth]{figures/PCA1.png}
         \caption{PCA Data Preparation Pipeline.}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.45\linewidth}
+    \begin{subfigure}[b]{0.4\linewidth}
         \centering
         \includegraphics[width=\linewidth]{figures/PCA2.png}
         \caption{PCA-MLP Architecture.}
@@ -394,10 +375,6 @@ For rapid prototyping we curate a \emph{small subset} composed of one 500-sample
 After min-max normalization of velocity ($1500$-$4500$\,m/s) and $\log$-amplitude scaling of gathers, the subset is randomly divided 70\% / 20\% / 10\% into training, validation, and test partitions.  
 The best architecture found on this subset is subsequently trained on the \emph{full} OpenFWI corpus and submitted to the Kaggle “Geophysical Waveform Inversion’’ leaderboard.
 
-\subsection{Evaluation metrics}
-
-We assess predicted velocity maps $\hat{v}$ against ground truth $v$ using four complementary metrics: 
-Mean Absolute Error (MAE), Root Mean Square Error (RMSE), Structural Similarity Index (SSIM), and relative $\ell_2$ error. These jointly capture average error, outlier sensitivity, structural fidelity, and normalized magnitude discrepancy.  MAE serves as the primary benchmark in the Kaggle leaderboard. All metrics are computed on the held-out test split. For the top-performing model, we also report MAE on the full \textsc{OpenFWI} dataset. Details and formulae for each metric are provided in Appendix~\ref{appendix:metrics-table}.
 
 \subsection{Hyperparameters and Training}
 
@@ -448,17 +425,12 @@ All models were trained on a single GPU (provided on DSMLP) with mixed‐precisi
 \end{table}
 
 \paragraph{Training protocol.}  
-Unless otherwise stated, gradients were unclipped and weight decay was set to
-$10^{-4}$ for operator-style models (FNO, ODE variants) and omitted elsewhere.
-Mini‐batches were shuffled each epoch and early stopping with a
-patience of 15 epochs was employed during the Optuna search; the best
-checkpoint was then retrained from scratch with the hyper-parameters shown
-above.  All reported test scores (Table~\ref{tab:quant}) correspond to these
-re-trained models.
 
-\subsection{Quantitative Results}
+Gradients were left unclipped; weight decay was $10^{-4}$ for operator models and omitted elsewhere. Mini-batches were shuffled each epoch. During hyperparameter tuning, early stopping (15 epoch patience) selected the best checkpoint, which was then retrained from scratch using the final configuration. All test scores in Table~\ref{tab:quant} reflect these final retrained models.
 
-Table \ref{tab:quant} reports validation MAE (used for early stopping) and four
+\subsection{Quantitative Results and Ablation Studies}
+
+We evaluate predicted velocity maps $\hat{v}$ against ground truth $v$ using four metrics: Mean Absolute Error (MAE), Root Mean Square Error (RMSE), Structural Similarity Index (SSIM), and relative $\ell_2$ error. MAE is the primary metric used in the Kaggle leaderboard. All scores are computed on the test split, with MAE on the full dataset reported for the best model. See Appendix~\ref{appendix:metrics-table} for definitions. Table \ref{tab:quant} reports validation MAE (used for early stopping) and four
 test-set metrics for all nine models.  Lower is better except for SSIM, where
 higher indicates greater structural fidelity.
 
@@ -487,20 +459,8 @@ Best value in each column is \textbf{bold}.}
 \label{tab:quant}
 \end{table}
 
-\subsection{Qualitative Results}
-
-Figure \ref{fig:qualitative_results} shows qualitative results for the best-performing model (Fourier DeepONet) and the baseline InversionNet. The predicted velocity maps exhibit high structural fidelity, with the Fourier DeepONet capturing fine details and long-range correlations better than the other models.
-
-\begin{figure}
-    \centering
-    \includegraphics[width=\linewidth]{figures/qualitative_results.png}
-    \caption{Qualitative comparison of predicted velocity maps from different models against the ground truth. Each row corresponds to a different sample in the testing set, with the first column showing the ground truth velocity map. The subsequent columns show the predictions from each model. The colorbar indicates the velocity scale in m/s. The Fourier DeepONet predictions closely match the ground truth, while other models exhibit varying degrees of deviation.}
-    \label{fig:qualitative_results}
-\end{figure}
-
-\subsection{Ablation Studies on 2D FNO and Neural ODE}
-
 Since the 2D FNO and Neural ODE models initially did not perform as well as the state-of-the-art models (e.g.\ Fourier DeepONet, InversionNet), we performed hyper-parameter sweeps to identify the best configurations for these models. The results of these ablations are summarized in Figure~\ref{tab:ablation_studies}.
+
 
 \vspace{-4pt}
 \begin{figure}
@@ -563,21 +523,20 @@ Weight decay & \textbf{$5\!\times\!10^{-5}$} (CNN base only) \\
 \label{tab:ablation_studies}
 \end{figure}
 
+\subsection{Qualitative Results}
+
+Figure \ref{fig:qualitative_results} shows qualitative results for the best-performing model (Fourier DeepONet) and the baseline InversionNet. The predicted velocity maps exhibit high structural fidelity, with the Fourier DeepONet capturing fine details and long-range correlations better than the other models.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/qualitative_results.png}
+    \caption{Qualitative comparison of predicted velocity maps from different models against the ground truth. Each row corresponds to a different sample in the testing set, with the first column showing the ground truth velocity map. The subsequent columns show the predictions from each model. The colorbar indicates the velocity scale in m/s. The Fourier DeepONet predictions closely match the ground truth, while other models exhibit varying degrees of deviation.}
+    \label{fig:qualitative_results}
+\end{figure}
+
 
 \subsection{Discussion and Model Comparison}
-Fourier DeepONet dominates every error metric, confirming that its
-spectral-operator design excels at capturing long-range, multi-scale
-dependencies present in seismic data.
-VelocityGAN achieves the lowest \emph{validation} MAE, but is narrowly
-outperformed by DeepONet on the test set as it has the tendency to
-slightly over-fit small training corpora.
-Residual UNet matches GAN-level MAE yet suffers larger RMSE, suggesting it
-reconstructs average structure well but mis-predicts high-contrast features.
-FNO secures reasonable SSIM but lags in absolute error, likely due to limited
-spectral bandwidth imposed by memory constraints.
-All Neural-ODE variants and the PCA\,-\,MLP baseline trail by at least one
-order of magnitude, underlining the importance of spatial priors and expressive
-decoders for FWI.
+Fourier DeepONet leads across all metrics, likely due to its spectral operator structure and multiscale skip connections. VelocityGAN achieves the lowest validation MAE but overfits slightly, while Residual UNet performs well on MAE yet has larger RMSE, suggesting it captures coarse structure but misses fine features. FNO lags in absolute error due to bandwidth constraints. Neural ODE variants and the PCA baseline perform worst, showing the need for spatial priors and expressive decoders.
 
 \subsection{Kaggle Competition Submission}
 
@@ -609,36 +568,31 @@ decoders for FWI.
     \label{fig:kaggle_triptych}
 \end{figure}
 
-\paragraph{Distributed training protocol.} To reach the 622 GB OpenFWI scale, we trained the best-in-validation \emph{Fourier DeepONet} with \textbf{torchrun} on $2 \times 2080$ GPUs.  
-Each GPU processed a \textit{per-device} batch of four shots; gradients were accumulated for one step and synchronized by \textbf{Distributed Data Parallel} (DDP).  Key settings mirror Table~\ref{tab:hparams} but employ \textbf{AdamW} ($\eta =3\times10^{-4}$, weight decay $10^{-4}$), FP16 mixed precision, exponential moving average (EMA, $\alpha=0.999$), and early stopping after 15 stagnant epochs.  
-
-Training converged in $80$ epochs (\(\approx\) 18 GPU-hours).  
-The resulting EMA weights were used to generate the competition submission; on the hidden test split Kaggle reports an \textbf{MAE of 195.5\,m/s}.  
-The gap with our in-house validation (71.4\,m/s) implies a distribution shift between \textsc{OpenFWI} and the competition data, especially at larger depths and higher velocities (Figure~\ref{fig:kaggle_triptych}b–c), motivating future research on domain adaptation.
+To scale to the full 622\,GB dataset, we trained Fourier DeepONet using \texttt{torchrun} on 2×2080 GPUs with per-GPU batch size 4, FP16, DDP, and AdamW (lr=$3\times10^{-4}$, weight decay $10^{-4}$, EMA with $\alpha{=}0.999$). Early stopping triggered after 15 epochs. Training converged in 80 epochs (~18 GPU-hrs). The resulting model achieved an MAE of 195.5\,m/s on the hidden Kaggle test set. The gap with our in-house validation (71.4\,m/s) suggests domain shift, especially at greater depths and velocities (Figure~\ref{fig:kaggle_triptych}b–c), motivating future work in adaptation.
 
 \section{Conclusion}
 % \instructions{Conclusion [5\%]: Summarize your project and findings. High-level discussion about what you have learned from this project, what works, and what does not work, and ideas/suggestions for future work if you/others want to work on this problem.} 
 
-\paragraph{Summary and Key Insights}.
+\paragraph{Summary and Key Insights}
 This project investigated a variety of data-driven models for seismic-to-velocity inversion. We implemented baseline architectures (InversionNet, VelocityGAN, Residual UNet), advanced neural operators (Fourier DeepONet, FNO), and a PCA-MLP dimensionality reduction pipeline. Among these, the Fourier DeepONet achieved the lowest test error on the Kaggle competition set when trained on the full OpenFWI dataset. Architectures that preserved spatial structure and captured long-range correlations consistently outperformed simpler MLP-based models.
 
-\paragraph{What Worked and What Did Not}.
+\paragraph{What Worked and What Did Not}
 Convolutional and operator-based models like UNet, DeepONet, and FNO were the most effective, as they leveraged spatial continuity and hierarchical features. Lightweight models like PCA-MLP were fast but less accurate due to loss of spatial information. Training on the reduced Kaggle subset led to frequent overfitting, indicating the need for larger-scale data or better regularization.
 
-\paragraph{Future Directions}.
+\paragraph{Future Directions}
 Future work can focus on three areas:
 \begin{itemize}[leftmargin=*, itemsep=1pt, topsep=2pt]
     \item \textbf{Noise Robustness:} Evaluate model stability under input perturbations to simulate real-world sensor noise, following findings in \cite{fdonet}.
     \item \textbf{Full-Scale Training:} Extend training of all models to the full OpenFWI dataset. Currently, only the Fourier DeepONet has been fully scaled.
-    \item \textbf{Dimensionality Reduction with Stronger Backbones:} Replace the MLP in PCA-MLP with spatially-aware architectures like CNNs. Figure~\ref{fig:conclusion1} illustrates this proposed PCA-CNN pipeline.
+    \item \textbf{Dimensionality Reduction with Stronger Backbones:} Replace the MLP in PCA-MLP with spatially-aware architectures like CNNs or Residual UNet to improve performance while retaining the benefits of dimensionality reduction.
 \end{itemize}
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\linewidth]{figures/conclusion1.png}
-    \caption{Proposed PCA-CNN architecture combining dimensionality reduction with a convolutional backbone.}
-    \label{fig:conclusion1}
-\end{figure}
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.8\linewidth]{figures/conclusion1.png}
+%     \caption{Proposed PCA-CNN architecture combining dimensionality reduction with a convolutional backbone.}
+%     \label{fig:conclusion1}
+% \end{figure}
 
 \newpage
 % \instructions{The following sections do not count towards the 8-Page Limits.}
@@ -707,15 +661,15 @@ Table \ref{tab:team_contrib} summarizes the contributions of each team member to
 \end{table}
 
 
-\subsection*{Confirmation of Teaching Evaluation Submission}
+\subsection*{Confirmation of Teaching Evaluation Submission (Bonus Points)}
 
 Our team confirms that we have submitted our teaching evaluation for the ECE 228 course and the teaching assistant evaluations. Here are screenshots that confirm our submission (Figure \ref{fig:teaching_evaluation}).
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.49\linewidth]{figures/teaching_evaluations/instructor_eval.png}
-    \includegraphics[width=0.49\linewidth]{figures/teaching_evaluations/ta_eval.png}
-    \includegraphics[width=\linewidth]{figures/teaching_evaluations/set_eval.png}
+    \includegraphics[width=0.7\linewidth]{figures/teaching_evaluations/instructor_eval.png}
+    \includegraphics[width=0.7\linewidth]{figures/teaching_evaluations/ta_eval.png}
+    \includegraphics[width=0.9\linewidth]{figures/teaching_evaluations/set_eval.png}
     \caption{Teaching Evaluation Submission Confirmation}
     \label{fig:teaching_evaluation}
 \end{figure}
