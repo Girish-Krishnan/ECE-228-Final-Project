@@ -27,6 +27,8 @@
 \usepackage{amstext}
 \usepackage{amsmath}
 \usepackage{tabularx, makecell}
+\usepackage{booktabs}
+\usepackage{multirow}
 \newcommand{\instructions}[1]{{\color{blue} #1}}
 
 \title{Final Project For ECE228 Track Number \# 1}
@@ -470,7 +472,70 @@ Figure \ref{fig:qualitative_results} shows qualitative results for the best-perf
 \subsection{Ablation Studies}
 
 \subsubsection{2D Fourier Neural Operator Ablation}
-\textcolor{blue}{\textbf{TODO:} Yash will add experiments and results for the 2D Fourier Neural Operator ablation.}
+
+The table below summarizes some hyperparameter tuning attempts with details for why values were increased or decreased following experimentation. The final value is bolded for each hyperparameter.
+
+\begin{center}
+\begin{tabular}{|c|c|p{8cm}|}
+\toprule
+\textbf{Hyperparameter} & \textbf{Experiments} & \textbf{Reasoning} \\
+\midrule
+
+\multirow{3}{*}{\textbf{\# Fourier Blocks}} 
+
+& 2 & Performance was adequate, however generated velocity maps lacked visualization of more complex spatial features\\
+
+& \textbf{4} & Best result out of all experiments. Some overfitting was seen but the test set produced promising outputs.  \\
+
+& 5 & Overfitting was significantly worse than the 4 layer case \\
+
+\midrule
+
+\multirow{3}{*}{\textbf{Width (\# Neurons)}} 
+
+& 16 &  \\
+
+& 32 &  \\
+
+& \textbf{64} & Provided better results with no significant jump in overfitting. Did not experiment with higher values due to training time already increasing significantly.   \\
+
+\midrule
+
+\multirow{5}{*}{\textbf{Fourier Modes}} 
+
+& 4 & Velocity maps missed finer details and were slightly jagged  \\
+
+& 8 &  \\
+
+& 16 &  \\
+
+& \textbf{32} & Captured some finer spatial relationships though there were some signs of overfitting \\
+
+& 64 & Faced CUDA Out of Memory errors at times and successful training runs did not show much improvement over 32 modes. Also showed greater signs of overfitting. \\
+
+\midrule
+
+\multirow{3}{*}{\textbf{Epochs}} 
+
+& 10 &  \\
+
+& 200 &  \\
+
+& \textbf{250} & Provided good results, did not increase further due to diminishing returns in accuracy improvement. Also starting to show signs of overfitting already.  \\
+
+\midrule
+
+\multirow{3}{*}{\textbf{Batch Size}} 
+
+& 4 & Training time increased significantly with no real benefit in accuracy \\
+
+& \textbf{10} & Best tradeoff between smooth learning and memory efficiency \\
+
+& 20 & Training was much faster but slightly unstable. Led to CUDA Out of Memory Errors in some experiments \\
+
+\bottomrule
+\end{tabular}
+\end{center}
 
 \subsubsection{Neural ODE and Augmented Neural ODE Ablation}
 For the standard Neural ODE, one of the hyperparameters experimented with was the hidden dimension that was used between the encoder, solver, and decoder. Originally, 128 was used but this made the model too complex and increased training time, so it was reduced to 64. Another hyperparameter was the learning rate, which was originally at $1 \times 10^{-4}$ but was changed to $1 \times 10^{-3}$ because the smaller learning rate did not improve accuracy significantly. Batch size was reduced from 32 to 8 because of CUDA memory errors. Lastly, tolerance was chosen to be $1 \times 10^{-3}$ and maximum number of steps was 100 for a quicker convergence for the differential equation solver. For the Augmented Neural ODE with the MLP base, the same hyperparameters were used. An augmented dimension of one was chosen because the model learned without augmentation, so an additional dimension was added as an experiment to see if it would improve learning. For the Augmented Neural ODE with a CNN base, the learning rate was $3\times 10^{-4}$, because $1 \times 10^{-4}$ had a slower convergence and $1 \times 10^{-3}$ was leading to instability. A weight decay of $5 \times 10^{-5}$ was also chosen for the optimizer. After hyper-parameter experimentation and selection, the metrics computed were similar amongst all three models.
