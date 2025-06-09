@@ -123,16 +123,16 @@ where $p$ is the seismic wavefield and $s$ is the source. Inversion recovers $c(
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.48\linewidth]{figures/intro1.png}
+    \includegraphics[width=0.49\linewidth]{figures/intro1.png}
     \hfill
-    \includegraphics[width=0.48\linewidth]{figures/intro2.png}
+    \includegraphics[width=0.49\linewidth]{figures/intro2.png}
     \caption{(Left) Surface-seismic acquisition. (Right) High-resolution velocity model inferred from recorded data.}
     \label{fig:intro}
 \end{figure}
 
 While underground receivers offer accurate data, they are costly and disruptive. Surface receivers are cheaper but introduce significant noise. Our work explores learning-based approaches to infer velocity maps from surface seismic data using various neural architectures.
 
-We evaluate several models, including Fourier DeepONet, Residual UNet, InversionNet, VelocityGAN, 2D Fourier Neural Operator, Augmented Neural ODEs, and a PCA-based MLP. Fourier DeepONet achieved the best MAE of 59.54~m/s on our testing set, placing us \textbf{591st of 6446 entrants} in the Kaggle competition.
+We evaluate several models, including Fourier DeepONet, Residual UNet, InversionNet, VelocityGAN, 2D Fourier Neural Operator, Augmented Neural ODEs, and a PCA-based MLP. Fourier DeepONet achieved the best mean absolute error on our testing set, placing us \textbf{591st of 6446 entrants} in the Kaggle competition.
 
 \paragraph{Contributions.}
 Brief summary of our contributions (see Appendix for full breakdown):
@@ -149,20 +149,32 @@ Brief summary of our contributions (see Appendix for full breakdown):
 \section{Related work} 
 % \instructions{Related works [5\%]: Please review the related work in this area, state the challenges/limitations of the existing methods, and how does your proposed work will help address the prior limitations and/or advance the current state-of-the-art for this problem.}
 
-The state-of-the-art paper for this problem is the Fourier DeepONet paper \cite{fdonet}, which showed that the Fourier DeepONet outperformed baselines such as InversionNet and VelocityGAN. However, this paper does not explore other potential architectures that could be used to solve the FWI problem. We decided to extend the results of this paper and adapt several models from papers shared in class to apply them to FWI, enabling direct performance comparisons with the Fourier DeepONet, InversionNet, and VelocityGAN. We implemented Augmented Neural ODEs \cite{anode} and the 2D Fourier Neural Operators \cite{fno}, and modified them for FWI.
+\textbf{Learning-based FWI.}  
+CNN surrogates \textit{InversionNet} and cGAN-based \textit{VelocityGAN}
+replace iterative adjoints, giving $10$-$100\times$ speed-ups but suffer from
+(i) narrow receptive fields, (ii) poor long-range physics, and (iii) fragility
+to noise and domain shift.  
+\textit{Fourier DeepONet} (F-DONet)~\cite{fdonet} mitigates (i)-(ii) with
+spectral convolutions and branch-trunk conditioning, setting the current
+\textsc{OpenFWI} SOTA, yet is compared only to the two baselines above.
 
-In addition, PCA has previously been applied to geophysical waveform inversion problems, particularly in the context of classifying gas hydrates using an unsupervised neural network approach known as Self-Organizing Maps (SOM) \cite{jones2023waveform} . In that work, PCA was used to reduce the dimensionality of the input data before passing it to the SOM for clustering subsurface gas hydrate distributions \cite{jones2023waveform}. %, as illustrated in Figure~\ref{fig:related1}.
+\textbf{Operator networks.}
+Fourier Neural Operators (FNO)~\cite{fno} provide mesh-independent spectral
+layers; Augmented Neural ODEs (ANODE)~\cite{anode} offer continuous-depth
+models.  Neither has been evaluated on seismic gathers and both face open
+practical issues: GPU memory (FNO) and solver stability (ODEs).
 
-% commenting out this figure for now, as it seems pretty useless TBH
+\textbf{Dimensionality reduction.}
+Receiver redundancy has motivated statistical preprocessing
+(e.g.\ PCA for gas-hydrate analysis~\cite{jones2023waveform}), but its merit
+for high-fidelity FWI regression is untested.
 
-% \begin{figure}
-%     \centering
-%     \includegraphics[width=0.5\linewidth]{figures/related1.png}
-%     \caption{PCA-SOM approach for classifying gas hydrates underground \cite{jones2023waveform}.}
-%     \label{fig:related1}
-% \end{figure}
-
-However, the task in \cite{jones2023waveform} is a classification problem, whereas our objective is to predict continuous velocity maps. Nevertheless, PCA remains an effective method for reducing dimensionality while retaining most of the variance in the dataset.
+We bridge these gaps by (i) benchmarking seven architectures—UNet,
+InversionNet, VelocityGAN, F-DONet, \mbox{2-D} FNO, Neural ODE, ANODE, and a
+PCA\,+\,MLP baseline—on a common \textsc{OpenFWI} split; (ii) probing their
+robustness across depth, velocity, and domain shift (Kaggle test); and
+(iii) scaling the best model via distributed training to the full 622 GB
+dataset, advancing practical SOTA in learned FWI.
 
 \section{Methodology}
 % \instructions{Method/Approach [40\%]: this should be the main section of your report. Describe your approach, any equation and/or algorithm you developed to solve the problem. This part will be evaluated based on both scientific merit and technical depth.} \\
@@ -173,7 +185,7 @@ This section describes the different models we implemented along with their trai
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.8\linewidth]{figures/FDONet.png}
+    \includegraphics[width=0.6\linewidth]{figures/FDONet.png}
     \caption{\textbf{Fourier-DeepONet architecture.} 
     \textbf{(A)} Branch net and trunk net are two linear transformations lifting inputs to high dimensional space. Green circle represents the merger operation which denotes point-wise multiplication. 
     \textbf{(B)} Fourier layer, adapted from~\cite{li2020fourier}. 
@@ -274,18 +286,53 @@ Several top-performing competitors in the Kaggle competition employ similar arch
     \label{fig:neuralode-merged}
 \end{figure}
 
-One of the models chosen to experiment with was the Neural ODE as learned in the course. Neural ODEs are differential equation solvers, with the solver essentially being a black box. The model can be implemented by using the \texttt{torchdiffeq} package in Python and the function \texttt{odeint} from this package. The structure of this model was a convolutional encoder, a three-layer MLP as the base function, and a decoder to shape the output as a 70×70 tensor to compare against the ground truth. 
+A Neural ODE treats depth as continuous.  
+A conv-encoder $E$ maps the seismic cube $u\!\in\!\mathbb R^{5\times1000\times70}$ to an
+initial latent $z_0\in\mathbb R^{d}$.
+Latent evolution is defined by a time-invariant vector field
+$f_\theta$ (3-layer MLP)
 
-Two different Augmented Neural ODEs were also created. One model had the same MLP as a base function and the other had a simple convolutional network as its base. Both models had an augmented dimension of 1. Augmented Neural ODEs were chosen because the augmented dimension helps in cases where an extra dimension is needed so that trajectories do not intersect.
+\[
+\dot z(t)=f_\theta\!\bigl(z(t)\bigr),\qquad z(0)=z_0,
+\]
 
-As illustrated in \textbf{Figure~\ref{fig:neuralode-merged}}, the input seismic data is passed into an encoder and then augmented. This augmented data is passed into the differential equation solver and then decoded into the output velocity map. Subfigure (b) in particular shows the more specific structure of the Augmented Neural ODE with an MLP base.
+integrated with \texttt{odeint} (\texttt{torchdiffeq}).
+The terminal state $z(1)$ is decoded by a transposed-conv head
+$D:\mathbb R^{d}\!\to\!\mathbb R^{1\times70\times70}$,
+yielding $\hat v=D\!\bigl(z(1)\bigr)$
+(Fig. \ref{fig:neuralode-merged}a).
 
+\textbf{Augmented variants.}  
+Following \citet{anode}, we append one inert
+dimension $a$ so that $\tilde z=(z,a)$ and integrate
+$\dot{\tilde z}=(f_\theta(\tilde z),0)$.
+We consider two choices for $f_\theta$:
+(i) the same MLP (Fig. \ref{fig:neuralode-merged}b) and
+(ii) a shallow CNN, giving three ODE models in total.
 
 \subsection{2-Dimensional Fourier Neural Operator}
 
-Another model we tried was an adaptation of the Fourier Neural Operator \cite{fno} we learned about in class and experimented with in the homework. Since our input seismic data had both spatial and time dimensions and was required to produce a 2-dimensional velocity map, we adapted the Fourier Neural Operator such that it used 2D Fast Fourier Transforms in the spectral convolution.
+To directly learn the space-to-space map
+$u\!\mapsto\!v$ we adapt the Fourier Neural Operator \cite{fno}
+to 2-D seismic gathers (time $\times$ receiver).
+A conv-encoder first compresses $u$ to a $70\!\times\!70\!\times\!c$ feature grid, where $c$ is the number of channels (a hyperparameter).
+After concatenating a positional grid
+$g\!\subset\![0,1]^2$ (step $0.2$),
+the tensor passes through $L=4$
+spectral blocks (Fig.\ref{fig:fno-2d}):
 
-The architecture shown in \textbf{Figure \ref{fig:fno-2d}} starts off with a 2D convolution-based encoder that takes the seismic data and encodes it into 70×70 arrays used to learn the velocity map. It then average-pools the data to extract representative features from the original data stream. This is followed by grid concatenation; Fourier neural operators are fairly sensitive to grid resolution. The grid was chosen to have a step size of 0.2 to regularize the spatial steps taken by the data. Post concatenation, the data was passed through four series of spectral convolutions that perform Fourier transforms on the data, carry out weighted multiplications, and finally apply an inverse transform to prepare the data for the next block. \textbf{Figure \ref{fig:fno-2d}}(b) shows the internal structure of a single spectral convolution block. This was implemented with skip connections such that original data was weighted (through separate convolution layers) and added to the spectral outputs. Lastly, the model performs a decoding and projection to produce the velocity map predictions.
+\[
+\mathrm{Spectral}(x)=
+\mathcal F^{-1}\!\bigl(
+  W_{\!\text{spec}}\!\cdot\!\mathcal F(x)
+\bigr)+W_{\!\text{local}}*x,
+\]
+
+where $\mathcal F$ is the 2-D FFT, 
+$W_{\!\text{spec}}$ keeps the lowest 32\,modes,
+and the second term is a $1\times1$ convolution (skip connection).
+A linear projection converts the final feature map to
+$\hat v\in\mathbb R^{1\times70\times70}$.
 
 \begin{figure}
     \centering
@@ -306,69 +353,51 @@ The architecture shown in \textbf{Figure \ref{fig:fno-2d}} starts off with a 2D 
 
 \subsection{Principal Component Analysis (PCA) along with MLP} 
 
-To perform Principal Component Analysis (PCA), one must first normalize the data. The most common method of doing so is via Z-score normalization $(x - \mu)/\sigma$, where $\mu$ is the mean, $\sigma$ is the standard deviation, and $x$ is the data point. The reason for normalizing the data is so that features with inherently larger magnitudes do not overshadow those with smaller magnitudes. For example, the number of molecules in a human is several orders of magnitude larger than human height in inches.
-
-After normalization, we perform PCA by calculating the eigenvectors of the covariance matrix, which represent the principal components. Each principal component (PC) is an eigenvector that captures a direction of maximum variance in the data and is orthogonal to the previous PCs. The weights associated with each PC are known as loading scores and indicate how much a PC accounts for variability in the dataset. The PCs now act as the new dependent variables instead of our original features.
+We form a lightweight baseline by reducing the receiver-axis with
+Principal Component Analysis (PCA).
+For each shot $u\!\in\!\mathbb R^{5\times1000\times70}$ we stack sources
+into a $5000\times70$ matrix, apply z-score normalisation,
+and project onto the top $k=18$ components
+($\!\approx\!95\%$ variance).
+Flattening yields a vector
+$x\in\mathbb R^{5000\times k}$ that feeds a
+four-layer MLP with
+LayerNorm\,$\to$\,ReLU\,$\to$\,Dropout.
+The network outputs $\hat v\in\mathbb R^{1\times70\times70}$
+after a final reshape (Fig.\ref{fig:pca}).
+This model tests how far linear dimensionality reduction can go
+before spatial structure must be learned end-to-end.
 
 \begin{figure}
     \centering
     \begin{subfigure}[b]{0.45\linewidth}
         \centering
         \includegraphics[width=\linewidth]{figures/PCA1.png}
-        \caption{PCA Data Preparation}
+        \caption{PCA Data Preparation Pipeline.}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.45\linewidth}
         \centering
         \includegraphics[width=\linewidth]{figures/PCA2.png}
-        \caption{PCA-MLP Architecture}
+        \caption{PCA-MLP Architecture.}
     \end{subfigure}
     \caption{(a) Seismic waveform data reshaped and reduced via PCA. (b) MLP model applied to PCA-transformed data.}
     \label{fig:pca}
 \end{figure}
 
-PCA is performed on the seismic waveform dataset by first taking a single batch with dimensions $5 \times 1000 \times 70$. We then extract each source individually, resulting in a $1000 \times 70$ matrix where each column represents a given receiver. Because of the large number of receivers, we aim to reduce this dimension since many may provide redundant data. We reduce this from 70 receivers to 18 principal components. Empirical testing showed that 18 PCs consistently captured about 95\% of the variance for each source. To allow consistent stacking of all sources, we use a fixed number of PCs rather than selecting the minimum needed per source. This results in a $5000 \times 18$ matrix, which is flattened into a single feature vector per batch. All batches are stacked to form the full dataset, which serves as input to the model.
-
-The transformed data is then passed through a multi-layer perceptron (MLP), with normalization and dropout applied to each layer.
-
 \section{Experiments}
 % \instructions{Results [30\%]: present your results and provide sufficient discussions of the results. 1) Describe what dataset is being used, details in data processing, train-test data split, and hyperparameter choices in your model etc. Provide the sufficient details such that if a reader would like to reproduce your results, they have enough information to do it. 2) Include figures and/or tables showing the quantitative and qualitative performance of your method; 3) Comparison to necessary baseline methods and comparison to your proposed method.} 
 
 \subsection{Dataset and Data Processing}\label{subsec:data}
-\textsc{OpenFWI} is a public, 622\,GB benchmark that gathers multi\-fold synthetic seismic‐to‐velocity pairs generated with finite‐difference forward modelling over a variety of 2-D geological scenarios (e.g.\ \emph{FlatVel}, \emph{CurveVel}, \emph{FlatFault}, \emph{CurveFault}, \emph{Style}) \cite{openfwi2021,openfwi2023}.  Each sample consists of a tensor of raw pressure gathers $\mathbf{s}\!\in\!\mathbb{R}^{5\times1000\times70}$ (five sources, 1000 time steps, 70 receivers) and its corresponding velocity map $v\!\in\!\mathbb{R}^{1\times70\times70}$.  
+\textsc{OpenFWI} is a public, 622\,GB benchmark that gathers multi\-fold synthetic seismic-to-velocity pairs generated with finite-difference forward modelling over a variety of 2-D geological scenarios (e.g.\ \emph{FlatVel}, \emph{CurveVel}, \emph{FlatFault}, \emph{CurveFault}, \emph{Style}) \cite{openfwi2021,openfwi2023}.  Each sample consists of a tensor of raw pressure gathers $\mathbf{s}\!\in\!\mathbb{R}^{5\times1000\times70}$ (five sources, 1000 time steps, 70 receivers) and its corresponding velocity map $v\!\in\!\mathbb{R}^{1\times70\times70}$.  
 For rapid prototyping we curate a \emph{small subset} composed of one 500-sample batch from the categories \texttt{CurveFault\_A}, \texttt{CurveVel\_A}, \texttt{FlatFault\_A}, and \texttt{Style\_A} (2 000 samples in total).  
-After min–max normalization of velocity ($1500$–$4500$\,m/s) and $\log$–amplitude scaling of gathers, the subset is randomly divided 70\% / 20\% / 10\% into training, validation, and test partitions.  
+After min-max normalization of velocity ($1500$-$4500$\,m/s) and $\log$-amplitude scaling of gathers, the subset is randomly divided 70\% / 20\% / 10\% into training, validation, and test partitions.  
 The best architecture found on this subset is subsequently trained on the \emph{full} OpenFWI corpus and submitted to the Kaggle “Geophysical Waveform Inversion’’ leaderboard.
 
-\subsection{Evaluation metrics}\label{subsec:metrics}
-Model outputs $\hat{v}$ are compared with ground-truth velocity maps $v$ using four complementary criteria that jointly capture absolute error, outlier sensitivity, structural fidelity, and scale\,/\,magnitude awareness using the metrics summarized in Table \ref{tab:metrics}.
+\subsection{Evaluation metrics}
 
-\begin{table}
-    \centering
-    \renewcommand{\arraystretch}{1.4}
-    \begin{tabular}{@{}p{1cm} p{8cm} c@{}}
-    \toprule
-    \textbf{Metric} & \textbf{Description} & \textbf{Formula} \\
-    \midrule
-    MAE & Measures average absolute difference between predicted and ground truth values. Also the primary metric used in the Kaggle competition. & 
-    $\displaystyle \frac{1}{N} \sum_{i=1}^{N} |y_i - \hat{y}_i|$ \\
-    \addlinespace
-    RMSE & Penalizes large errors more than MAE; helpful for evaluating overall accuracy. &
-    $\displaystyle \sqrt{ \frac{1}{N} \sum_{i=1}^{N} (y_i - \hat{y}_i)^2 }$ \\
-    \addlinespace
-    SSIM & Captures perceptual similarity by comparing luminance, contrast, and structure. Useful for assessing structural fidelity. &
-    $\displaystyle \frac{(2\mu_x \mu_y + C_1)(2\sigma_{xy} + C_2)}{(\mu_x^2 + \mu_y^2 + C_1)(\sigma_x^2 + \sigma_y^2 + C_2)}$ \\
-    \addlinespace
-    Relative $\ell_2$ Error & Measures the relative difference scaled by the ground truth magnitude. Provides a normalized global error measure. &
-    $\displaystyle \frac{ \| y - \hat{y} \|_2 }{ \| y \|_2 }$ \\
-    \bottomrule
-    \vspace{0.1em}
-    \end{tabular}
-    \caption{Evaluation metrics used to quantify model performance on velocity map prediction. In the SSIM formula, $\mu_x$ and $\mu_y$ denote the local means of the predicted and ground truth images respectively, $\sigma_x^2$ and $\sigma_y^2$ are their local variances, $\sigma_{xy}$ is the local covariance, and $C_1$, $C_2$ are small constants that stabilize the division to avoid numerical instability.}
-    \label{tab:metrics}
-\end{table}
-
-All metrics are reported on the held-out test split of the subset. For the best-performing model, we also report the MAE on the full OpenFWI dataset, which is used to rank submissions in the Kaggle competition.
+We assess predicted velocity maps $\hat{v}$ against ground truth $v$ using four complementary metrics: 
+Mean Absolute Error (MAE), Root Mean Square Error (RMSE), Structural Similarity Index (SSIM), and relative $\ell_2$ error. These jointly capture average error, outlier sensitivity, structural fidelity, and normalized magnitude discrepancy.  MAE serves as the primary benchmark in the Kaggle leaderboard. All metrics are computed on the held-out test split. For the top-performing model, we also report MAE on the full \textsc{OpenFWI} dataset. Details and formulae for each metric are provided in Appendix~\ref{appendix:metrics-table}.
 
 \subsection{Hyperparameters and Training}
 
@@ -433,7 +462,7 @@ Table \ref{tab:quant} reports validation MAE (used for early stopping) and four
 test-set metrics for all nine models.  Lower is better except for SSIM, where
 higher indicates greater structural fidelity.
 
-\begin{table}[H]
+\begin{table}
 \centering
 \small
 \renewcommand{\arraystretch}{1.15}
@@ -590,16 +619,13 @@ The gap with our in-house validation (71.4\,m/s) implies a distribution shift be
 \section{Conclusion}
 % \instructions{Conclusion [5\%]: Summarize your project and findings. High-level discussion about what you have learned from this project, what works, and what does not work, and ideas/suggestions for future work if you/others want to work on this problem.} 
 
-\subsection{Summary and Key Insights}
-
+\paragraph{Summary and Key Insights}.
 This project investigated a variety of data-driven models for seismic-to-velocity inversion. We implemented baseline architectures (InversionNet, VelocityGAN, Residual UNet), advanced neural operators (Fourier DeepONet, FNO), and a PCA-MLP dimensionality reduction pipeline. Among these, the Fourier DeepONet achieved the lowest test error on the Kaggle competition set when trained on the full OpenFWI dataset. Architectures that preserved spatial structure and captured long-range correlations consistently outperformed simpler MLP-based models.
 
-\subsection{What Worked and What Did Not}
-
+\paragraph{What Worked and What Did Not}.
 Convolutional and operator-based models like UNet, DeepONet, and FNO were the most effective, as they leveraged spatial continuity and hierarchical features. Lightweight models like PCA-MLP were fast but less accurate due to loss of spatial information. Training on the reduced Kaggle subset led to frequent overfitting, indicating the need for larger-scale data or better regularization.
 
-\subsection{Future Directions}
-
+\paragraph{Future Directions}.
 Future work can focus on three areas:
 \begin{itemize}[leftmargin=*, itemsep=1pt, topsep=2pt]
     \item \textbf{Noise Robustness:} Evaluate model stability under input perturbations to simulate real-world sensor noise, following findings in \cite{fdonet}.
@@ -623,6 +649,7 @@ Future work can focus on three areas:
 The link to our GitHub repository is as follows: \url{https://github.com/Girish-Krishnan/ECE-228-Final-Project/tree/main}. 
 
 This repo contains all the code used to run our models, including the data preprocessing, model training, and evaluation scripts. The \texttt{README.md} file provides detailed instructions on how to set up the environment, install dependencies, and run the code to reproduce our results.
+
 
 \subsection*{Team Member Contribution}
 % \instructions{Describing each team member's contribution for this project (e.g., conceptualization, Data curation, Methodology, Software/Experiments, Report Writing, Poster preparation, etc)} 
@@ -682,7 +709,7 @@ Table \ref{tab:team_contrib} summarizes the contributions of each team member to
 
 \subsection*{Confirmation of Teaching Evaluation Submission}
 
-Our team confirms that we have submitted our teaching evaluation for the ECE 228 course and the teaching assistant evaluations. Here are screenshots that confirm our submission:
+Our team confirms that we have submitted our teaching evaluation for the ECE 228 course and the teaching assistant evaluations. Here are screenshots that confirm our submission (Figure \ref{fig:teaching_evaluation}).
 
 \begin{figure}[H]
     \centering
@@ -695,15 +722,37 @@ Our team confirms that we have submitted our teaching evaluation for the ECE 228
 
 Thanks for teaching us this awesome course!
 
+\subsection*{Evaluation Metrics Formulae}
+\label{appendix:metrics-table}
+
+Table \ref{tab:metrics} summarizes the evaluation metrics used to quantify model performance on velocity map prediction.
+
+\begin{table}
+    \centering
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{@{}p{1cm} p{8cm} c@{}}
+    \toprule
+    \textbf{Metric} & \textbf{Description} & \textbf{Formula} \\
+    \midrule
+    MAE & Measures average absolute difference between predicted and ground truth values. Also the primary metric used in the Kaggle competition. & 
+    $\displaystyle \frac{1}{N} \sum_{i=1}^{N} |y_i - \hat{y}_i|$ \\
+    \addlinespace
+    RMSE & Penalizes large errors more than MAE; helpful for evaluating overall accuracy. &
+    $\displaystyle \sqrt{ \frac{1}{N} \sum_{i=1}^{N} (y_i - \hat{y}_i)^2 }$ \\
+    \addlinespace
+    SSIM & Captures perceptual similarity by comparing luminance, contrast, and structure. Useful for assessing structural fidelity. &
+    $\displaystyle \frac{(2\mu_x \mu_y + C_1)(2\sigma_{xy} + C_2)}{(\mu_x^2 + \mu_y^2 + C_1)(\sigma_x^2 + \sigma_y^2 + C_2)}$ \\
+    \addlinespace
+    Relative $\ell_2$ Error & Measures the relative difference scaled by the ground truth magnitude. Provides a normalized global error measure. &
+    $\displaystyle \frac{ \| y - \hat{y} \|_2 }{ \| y \|_2 }$ \\
+    \bottomrule
+    \vspace{0.1em}
+    \end{tabular}
+    \caption{Evaluation metrics used to quantify model performance on velocity map prediction. In the SSIM formula, $\mu_x$ and $\mu_y$ denote the local means of the predicted and ground truth images respectively, $\sigma_x^2$ and $\sigma_y^2$ are their local variances, $\sigma_{xy}$ is the local covariance, and $C_1$, $C_2$ are small constants that stabilize the division to avoid numerical instability.}
+    \label{tab:metrics}
+\end{table}
 
 \bibliography{bib}
 \bibliographystyle{abbrvnat}
-
-
-
-
-
-
-
 
 \end{document}
