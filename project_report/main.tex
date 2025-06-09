@@ -469,76 +469,71 @@ Figure \ref{fig:qualitative_results} shows qualitative results for the best-perf
     \label{fig:qualitative_results}
 \end{figure}
 
-\subsection{Ablation Studies}
+\subsection{Ablation Studies on 2D FNO and Neural ODE}
 
-\subsubsection{2D Fourier Neural Operator Ablation}
+Since the 2D FNO and Neural ODE models initially did not perform as well as the state-of-the-art models (e.g.\ Fourier DeepONet, InversionNet), we performed hyper-parameter sweeps to identify the best configurations for these models. The results of these ablations are summarized in Figure~\ref{tab:ablation_studies}.
 
-The table below summarizes some hyperparameter tuning attempts with details for why values were increased or decreased following experimentation. The final value is bolded for each hyperparameter.
+\vspace{-4pt}
+\begin{figure}
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.05}
 
-\begin{center}
-\begin{tabular}{|c|c|p{8cm}|}
+\begin{minipage}[t]{0.48\linewidth}
+\captionof{table}{2-D FNO ablations (bold = final choice).}
+\label{tab:fno_ablate}
+\begin{tabularx}{\linewidth}{@{}l X@{}}
 \toprule
-\textbf{Hyperparameter} & \textbf{Experiments} & \textbf{Reasoning} \\
+\textbf{Parameter} & \textbf{Explored values and observations}\\
 \midrule
+\# spectral blocks & 2: coarse details \hfill 5: heavy over-fit \\
+                   & \textbf{4}: best MAE, mild over-fit \\[2pt]
 
-\multirow{3}{*}{\textbf{\# Fourier Blocks}} 
+Width & 16, 32: under-fit \\
+      & \textbf{64}: better MAE, tolerable run-time \\[2pt]
 
-& 2 & Performance was adequate, however generated velocity maps lacked visualization of more complex spatial features\\
+Fourier modes & 4–16: jagged maps \\
+              & \textbf{32}: captures fine structure \\
+              & 64: GPU OOM / worse generalization \\[2pt]
 
-& \textbf{4} & Best result out of all experiments. Some overfitting was seen but the test set produced promising outputs.  \\
+Epochs & 10: under-train \hfill 200: modest gain \\
+       & \textbf{250}: sweet-spot before over-fit \\[2pt]
 
-& 5 & Overfitting was significantly worse than the 4 layer case \\
-
-\midrule
-
-\multirow{3}{*}{\textbf{Width (\# Neurons)}} 
-
-& 16 &  \\
-
-& 32 &  \\
-
-& \textbf{64} & Provided better results with no significant jump in overfitting. Did not experiment with higher values due to training time already increasing significantly.   \\
-
-\midrule
-
-\multirow{5}{*}{\textbf{Fourier Modes}} 
-
-& 4 & Velocity maps missed finer details and were slightly jagged  \\
-
-& 8 &  \\
-
-& 16 &  \\
-
-& \textbf{32} & Captured some finer spatial relationships though there were some signs of overfitting \\
-
-& 64 & Faced CUDA Out of Memory errors at times and successful training runs did not show much improvement over 32 modes. Also showed greater signs of overfitting. \\
-
-\midrule
-
-\multirow{3}{*}{\textbf{Epochs}} 
-
-& 10 &  \\
-
-& 200 &  \\
-
-& \textbf{250} & Provided good results, did not increase further due to diminishing returns in accuracy improvement. Also starting to show signs of overfitting already.  \\
-
-\midrule
-
-\multirow{3}{*}{\textbf{Batch Size}} 
-
-& 4 & Training time increased significantly with no real benefit in accuracy \\
-
-& \textbf{10} & Best tradeoff between smooth learning and memory efficiency \\
-
-& 20 & Training was much faster but slightly unstable. Led to CUDA Out of Memory Errors in some experiments \\
-
+Batch size & 4: slow \hfill \textbf{10}: stable / memory-safe \\
+           & 20: occasional OOM, noisier loss \\
 \bottomrule
-\end{tabular}
-\end{center}
+\end{tabularx}
+\end{minipage}\hfill
+%
+\begin{minipage}[t]{0.48\linewidth}
+\captionof{table}{Neural-ODE ablations (MLP unless noted).}
+\label{tab:ode_ablate}
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+\textbf{Parameter} & \textbf{Final choice and rationale}\\
+\midrule
+Hidden dimension & \textbf{64}; 128 slowed training, no MAE gain \\[2pt]
 
-\subsubsection{Neural ODE and Augmented Neural ODE Ablation}
-For the standard Neural ODE, one of the hyperparameters experimented with was the hidden dimension that was used between the encoder, solver, and decoder. Originally, 128 was used but this made the model too complex and increased training time, so it was reduced to 64. Another hyperparameter was the learning rate, which was originally at $1 \times 10^{-4}$ but was changed to $1 \times 10^{-3}$ because the smaller learning rate did not improve accuracy significantly. Batch size was reduced from 32 to 8 because of CUDA memory errors. Lastly, tolerance was chosen to be $1 \times 10^{-3}$ and maximum number of steps was 100 for a quicker convergence for the differential equation solver. For the Augmented Neural ODE with the MLP base, the same hyperparameters were used. An augmented dimension of one was chosen because the model learned without augmentation, so an additional dimension was added as an experiment to see if it would improve learning. For the Augmented Neural ODE with a CNN base, the learning rate was $3\times 10^{-4}$, because $1 \times 10^{-4}$ had a slower convergence and $1 \times 10^{-3}$ was leading to instability. A weight decay of $5 \times 10^{-5}$ was also chosen for the optimizer. After hyper-parameter experimentation and selection, the metrics computed were similar amongst all three models.
+Learning rate & \textbf{$1\!\times\!10^{-3}$}; $1\!\times\!10^{-4}$ too slow, \\
+              & $3\!\times\!10^{-4}$ used for CNN base \\[2pt]
+
+Batch size & \textbf{8}; 32 caused GPU OOM \\[2pt]
+
+Solver tol./steps & \textbf{$10^{-3}$ / 100}; faster convergence \\[2pt]
+
+Augmented dim. & \textbf{1}; adds capacity with negligible cost \\[2pt]
+
+Weight decay & \textbf{$5\!\times\!10^{-5}$} (CNN base only) \\
+\bottomrule
+\end{tabularx}
+\end{minipage}
+
+\vspace{-6pt}
+\caption{Summary of hyper-parameter sweeps used to select the final configurations for two models: 2-D Fourier Neural Operator (FNO) and Neural ODE. The tables list the parameters explored, their values, and the observations that led to the final choices.}
+\label{tab:ablation_studies}
+\end{figure}
+
 
 \subsection{Discussion and Model Comparison}
 Fourier DeepONet dominates every error metric, confirming that its
