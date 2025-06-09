@@ -473,8 +473,7 @@ Figure \ref{fig:qualitative_results} shows qualitative results for the best-perf
 \textcolor{blue}{\textbf{TODO:} Yash will add experiments and results for the 2D Fourier Neural Operator ablation.}
 
 \subsubsection{Neural ODE and Augmented Neural ODE Ablation}
-
-\textcolor{blue}{\textbf{TODO:} Harini will add experiments and results for the Neural ODE and Augmented Neural ODE ablation.}
+For the standard Neural ODE, one of the hyperparameters experimented with was the hidden dimension that was used between the encoder, solver, and decoder. Originally, 128 was used but this made the model too complex and increased training time, so it was reduced to 64. Another hyperparameter was the learning rate, which was originally at $1e-4$ but was changed to $1e-3$ because the smaller learning rate did not improve accuracy significantly. Batch size was reduced from 32 to 8 because of CUDA memory errors. Lastly, tolerance was chosen to be $1e-3$ and maximum number of steps was 100 for a quicker convergence for the differential equation solver. For the Augmented Neural ODE with the MLP base, the same hyperparameters were used. An augmented dimension of one was chosen because the model  learned without augmentation, so an additional dimension was added as an experiment to see if it would improve learning. For the Augmented Neural ODE with a CNN base, the learning rate was $3e-4$, because $1e-4$ had a slower convergence and $1e-3$ was leading to instability. A weight decay of $5e-5$ was also chosen for the optimizer. After hyper-parameter experimentation and selection, the metrics computed were similar amongst all three models.
 
 \subsection{Discussion and Model Comparison}
 Fourier DeepONet dominates every error metric, confirming that its
