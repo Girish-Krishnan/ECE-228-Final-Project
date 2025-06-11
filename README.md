@@ -1,6 +1,6 @@
-# <center>Physics-Informed Deep Learning for Geological Full Waveform Inversion (FWI)</center>
+# <p align="center">Physics-Informed Deep Learning for Geological Full Waveform Inversion (FWI)</p>
 
-*<center>Girish Krishnan, Ryan Irwandy, Yash Puneet, Harini Gurusankar</center>*
+__*<p align="center">Girish Krishnan, Ryan Irwandy, Yash Puneet, Harini Gurusankar</p>*__
 
 *<center>ECE 228 Final Project, Spring 2025</center>*
 
@@ -10,9 +10,9 @@
 |![](./media/waveform.gif)|
 |---|
 
-<center><a href="https://docs.google.com/presentation/d/1wfly51wmukF_M-mXVlJaRHG03IYZg2LK1fLiKip6Jt8/edit?usp=sharing" target="_blank">
-      Click here to view the poster!
-   </a></center>
+__<p align="center"><a href="https://docs.google.com/presentation/d/1wfly51wmukF_M-mXVlJaRHG03IYZg2LK1fLiKip6Jt8/edit?usp=sharing" target="_blank">
+      Click here to view our poster!
+   </a></p>__
 
 ---
 
