@@ -173,6 +173,8 @@ This script will:
 
 ## Running the Code for Each Model
 
+As explained in our [project report](./project_report/build/main.pdf), we implemented several models to tackle the seismic imaging problem.
+
 Each model in the `models` directory has its own `README.md` file that provides instructions on how to run the code for that specific model. 
 
 Please open the `models` directory and navigate to the subdirectory of the model you are interested in. Each subdirectory contains:
