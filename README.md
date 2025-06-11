@@ -189,3 +189,9 @@ For example, to run the FourierDeepONet model, you would navigate to the `models
 To submit your predictions to the Kaggle competition, you can use the code provided in the `kaggle` directory. This code will help you format your predictions and create a submission file that can be uploaded to the Kaggle competition page.
 
 Make sure to follow the instructions in the `kaggle/README.md` file to prepare your submission correctly.
+
+---
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
