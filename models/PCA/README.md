@@ -1,41 +1,136 @@
-## How to Run PCA Code
+# PCA-Based Velocity Prediction Pipeline
 
-### Step 0: What Are the `Model.py` and `PCA.py` Classes?
-
-#### `PCA.py`
-
-`PCA.py` contains the `PCAStreamlined` class that takes in data loaded from a `.npy` file.
-
-Depending on which dataset you are loading (whether it be seismic or velocity), you will use the `PCASeismic` or `PCAVelocity` child classes to do so.
-
-`PCASeismic` will take a given batch of size `5 x 1000 x 70` and PCA it (if told to) when `get_batch()` is called. It reshapes the data into a `5000 x n` dimension matrix, where `n` is the number of components to keep as specified in the constructor. This result is then flattened.
-
-`PCAVelocity` will do the same, but instead it takes a `70 x 70` batch size and flattens that instead.
-
-#### `Model.py`
-
-Contains the `MLP` class and `Trainer` function.
+This directory contains code that applies PCA to seismic and velocity data to compress input dimensions before training a fully connected neural network (MLP) to predict velocity maps.
 
 ---
 
-### Step 1: Running the Pipeline
+## File Overview
 
-`GetPCAData.py` will get the actual flattened PCA data to be fed into the model.
+### `PCA.py`
 
-This data will be stored in your local directory inside a folder called `PCAS`, split into train, test, and validation sets.
+Defines the PCA logic:
 
-Then `GetModel.py` will use the flattened PCA data to train the model, which will also be stored in the `PCAS` folder.
+* `PCAStreamlined`: Base class that applies PCA to any dataset.
+* `PCASeismic`: Child class used to process seismic data of shape `5 x 1000 x 70`. It reshapes and optionally applies PCA, resulting in `5000 x n` features per sample.
+* `PCAVelocity`: Child class for velocity data of shape `70 x 70`. This is flattened and optionally PCA-compressed.
 
-`GetVisData.py` will obtain a new batch for visualizations.
+### `Model.py`
 
-**TLDR:** Run the following in order:
+Defines the model architecture and training:
 
-* `GetPCAData.py`
-* `GetModel.py`
-* `GetVisData.py`
+* `MLP`: A customizable feedforward neural network.
+* `trainer`: Function to train and evaluate the MLP model using metrics including MAE, RMSE, SSIM, and relative L2 error.
+
+### `GetPCAData.py`
+
+* Loads raw `.npy` seismic and velocity data from the `FlatVel_A` dataset.
+* Applies PCA to both datasets.
+* Splits data into train, validation, and test sets.
+* Saves them into a directory called `PCAS/` as `.npy` files.
+
+### `GetModel.py`
+
+* Loads the PCA-compressed training data from `PCAS/`.
+* Initializes an MLP model.
+* Trains it using `trainer()` for 100 epochs.
+* Saves the model weights to `PCAS/pca_model.pth`.
+
+### `GetVisData.py`
+
+* Loads a new `.npy` seismic file (`FlatFault_A/seis2_1_0.npy`).
+* Applies PCA using `PCASeismic`.
+* Saves the compressed batch to `PCAS/VISUALIZATION.npy`.
+
+### `visualizationpca.py`
+
+* Loads `VISUALIZATION.npy` and the trained MLP.
+* Runs prediction on the input data.
+* Reshapes and visualizes the first predicted velocity map as a `70 x 70` image.
 
 ---
 
-### Step 2: Visualize
+## How to Run the Pipeline
 
-You can then visualize the data by running the code in `visualizationpca.py`.
+### Step 0: Environment Setup
+
+Make sure to install required Python packages:
+
+```bash
+pip install numpy torch matplotlib scikit-learn torchmetrics
+```
+
+Ensure your working directory has the following structure:
+
+```
+./
+├── FlatVel_A/
+│   ├── data/data1.npy
+│   └── model/model1.npy
+├── FlatFault_A/
+│   └── seis2_1_0.npy
+```
+
+### Step 1: Generate PCA Data
+
+Run the following to generate PCA-compressed training data:
+
+```bash
+python GetPCAData.py
+```
+
+This will create and populate the `PCAS/` directory with:
+
+* `train_X.npy`, `train_Y.npy`
+* `val_X.npy`, `val_Y.npy`
+* `test_X.npy`, `test_Y.npy`
+
+### Step 2: Train the MLP Model
+
+Run:
+
+```bash
+python GetModel.py
+```
+
+This will train the model and save it to `PCAS/pca_model.pth`.
+
+### Step 3: Prepare Visualization Input
+
+Run:
+
+```bash
+python GetVisData.py
+```
+
+This generates `PCAS/VISUALIZATION.npy`, a batch of PCA-compressed seismic data for prediction.
+
+### Step 4: Visualize the Predictions
+
+Finally, run:
+
+```bash
+python visualizationpca.py
+```
+
+This loads the trained model, makes predictions, and visualizes the first predicted velocity map using `matplotlib`.
+
+---
+
+## Notes
+
+* The PCA components are set to 18 by default. You can adjust this in `GetPCAData.py` and `GetVisData.py`.
+* Ensure all `.npy` paths are correct and consistent with your local directory.
+* The model assumes that the output velocity shape is square (e.g. `70x70`) to compute SSIM.
+
+---
+
+## TLDR
+
+To reproduce results:
+
+1. Run `GetPCAData.py`
+2. Run `GetModel.py`
+3. Run `GetVisData.py`
+4. Run `visualizationpca.py`
+
+All intermediate outputs and the final model are saved inside the `PCAS/` directory.
