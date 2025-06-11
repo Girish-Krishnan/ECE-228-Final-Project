@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Load data
-velocity = np.load('CurveFault_A/vel2_1_0.npy')
-seismic_data = np.load('CurveFault_A/seis2_1_0.npy')
+velocity = np.load('small_dataset/CurveFault_A/vel2_1_0.npy')
+seismic_data = np.load('small_dataset/CurveFault_A/seis2_1_0.npy')
 
 print(f'Velocity map size: {velocity.shape}')
 print(f'Seismic data size: {seismic_data.shape}')

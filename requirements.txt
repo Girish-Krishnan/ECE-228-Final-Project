@@ -1,0 +1,17 @@
+numpy
+scipy
+matplotlib
+torch>=2.0.0
+torchvision
+torchaudio
+scikit-learn
+scikit-image
+pandas
+tqdm
+optuna
+PyYAML
+h5py
+tensorboard
+omegaconf
+hydra-core
+torchdiffeq
