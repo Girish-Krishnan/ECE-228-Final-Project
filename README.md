@@ -2,7 +2,7 @@
 
 __*<p align="center">Girish Krishnan, Ryan Irwandy, Yash Puneet, Harini Gurusankar</p>*__
 
-*<center>ECE 228 Final Project, Spring 2025</center>*
+*<p align="center">ECE 228 Final Project, Spring 2025</p>*
 
 |![](./media/poster.png)|![](./media/team.png)|
 |---|---|
