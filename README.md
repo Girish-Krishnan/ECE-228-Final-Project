@@ -7,6 +7,9 @@
 |![](./media/poster.png)|![](./media/team.png)|
 |---|---|
 
+|![](./media/waveform.gif)|
+|---|
+
 <center><a href="https://docs.google.com/presentation/d/1wfly51wmukF_M-mXVlJaRHG03IYZg2LK1fLiKip6Jt8/edit?usp=sharing" target="_blank">
       Click here to view the poster!
    </a></center>
