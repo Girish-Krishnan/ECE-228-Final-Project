@@ -5,9 +5,6 @@ import torch, torch.nn as nn, torch.nn.functional as F
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# ──────────────────────────────────────────────────────────────
-# Dataset helpers  (unchanged – same transforms used in training)
-# ──────────────────────────────────────────────────────────────
 class SeismicDataset(torch.utils.data.Dataset):
     """Returns (branch, trunk_dummy, target_norm)"""
     def __init__(self, pair_list):
@@ -38,9 +35,6 @@ def gather_pairs(root):
             pairs.append((sp,mp))
     return pairs
 
-# ──────────────────────────────────────────────────────────────
-# Fourier-DeepONet  (EXACT layer names! – do NOT edit)
-# ──────────────────────────────────────────────────────────────
 class SpectralConv2d(nn.Module):
     def __init__(self, inc,outc,m1,m2):
         super().__init__(); self.modes1,self.modes2=m1,m2
@@ -100,16 +94,11 @@ class FourierDeepONet(nn.Module):
         xb=self.branch(inp[0]); xt=self.trunk(inp[1])
         return self.decoder(xb*xt + self.bias)
 
-# ──────────────────────────────────────────────────────────────
-# Utility
-# ──────────────────────────────────────────────────────────────
-def denorm(x): return x*3000+1500                                   # back to m/s
+def denorm(x): return x*3000+1500
 
-# --------------------------------------------------------------
 def main(args):
     os.makedirs(args.outdir,exist_ok=True)
 
-    # ---------------- dataset slice
     pairs   = gather_pairs(args.data_dir)
     ds      = SeismicDataset(pairs)
     idxs    = [0, 500, 1000, 1500, 999][:args.num]                  # clamp if fewer
@@ -118,7 +107,6 @@ def main(args):
     trunk   = torch.stack([b[1] for b in batch]).to(DEVICE)
     truth_n = torch.stack([b[2] for b in batch]).to(DEVICE)
 
-    # ---------------- model
     net = FourierDeepONet().to(DEVICE)
     ckpt = torch.load(args.ckpt, map_location=DEVICE)
     net.load_state_dict(ckpt["model_state_dict"], strict=True)
@@ -131,9 +119,6 @@ def main(args):
     truth  = denorm(truth_n.cpu())
     err    = torch.abs(pred - truth)                                # (B,1,70,70)
 
-    # ----------------------------------------------------------
-    # 1⃣  Triptych + error map
-    # ----------------------------------------------------------
     for k in range(len(idxs)):
         fig,axs=plt.subplots(1,4,figsize=(18,4))
         # Stack all 5 input channels horizontally (shape: [1000, 5×70])
@@ -153,9 +138,6 @@ def main(args):
         fig.savefig(f"{args.outdir}/sample{k:02d}_triptych.png",dpi=300)
         plt.close(fig)
 
-    # ----------------------------------------------------------
-    # 2⃣  Error-vs-velocity scatter (all pixels, all samples)
-    # ----------------------------------------------------------
     vel_vals = truth.view(-1).numpy()
     err_vals = err.view(-1).numpy()
     fig = plt.figure(figsize=(5,4))
@@ -165,9 +147,6 @@ def main(args):
     cb=plt.colorbar(); cb.set_label("log10(count)")
     fig.tight_layout(); fig.savefig(f"{args.outdir}/scatter_err_vs_vel.png",dpi=300); plt.close(fig)
 
-    # ----------------------------------------------------------
-    # 3⃣  Depth profile  – mean |error| per depth
-    # ----------------------------------------------------------
     depth_err = err.mean(dim=[0,1,3]).numpy()                       # (70,)
     fig = plt.figure(figsize=(4,4))
     plt.plot(depth_err, np.arange(70))
@@ -176,9 +155,6 @@ def main(args):
     plt.title("Depth profile of error")
     fig.tight_layout(); fig.savefig(f"{args.outdir}/depth_profile.png",dpi=300); plt.close(fig)
 
-    # ----------------------------------------------------------
-    # 4⃣  Mean log-amplitude residual spectrum (w/ proper axes)
-    # ----------------------------------------------------------
     resid = (truth - pred).numpy()
     spec  = np.fft.fft2(resid, axes=(-2, -1))
     amp   = np.log10(np.abs(spec) + 1e-6)
@@ -202,9 +178,8 @@ def main(args):
     plt.close(fig)
 
 
-    print(f"✓  All figures saved in →  {args.outdir}/")
+    print(f"All figures saved in {args.outdir}/")
 
-# --------------------------------------------------------------
 if __name__ == "__main__":
     pa=argparse.ArgumentParser()
     pa.add_argument("--ckpt", required=True, help="checkpoint (.pt/.pth)")
