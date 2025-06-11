@@ -1,33 +1,41 @@
-## How to Run PCA Code:  
+## How to Run PCA Code
 
-### Step 0: What Are the Model.py and PCA.py Classes? 
+### Step 0: What Are the `Model.py` and `PCA.py` Classes?
 
-#### PCA.py 
-PCA.py contains the PCAStreamlined Class that takes in data loaded in from a .npy file.
+#### `PCA.py`
 
-Depending on which dataset you are loading (whether it be seismic or velocity) You will use the PCASeismic or PCAVelocity child classes to do so.  
+`PCA.py` contains the `PCAStreamlined` class that takes in data loaded from a `.npy` file.
 
-PCASeismic will take a given batch of 5 x 1000 x 70 and PCA it (if told to) when get_batch() is called into a 5000 x n dimension matrix, where n is the number of components to keep as specified in teh constructor. This will then be flattened. 
+Depending on which dataset you are loading (whether it be seismic or velocity), you will use the `PCASeismic` or `PCAVelocity` child classes to do so.
 
-PCAVelocity will do the same, but instead it will take a 70 x 70 batch size and flatten that instead. 
+`PCASeismic` will take a given batch of size `5 x 1000 x 70` and PCA it (if told to) when `get_batch()` is called. It reshapes the data into a `5000 x n` dimension matrix, where `n` is the number of components to keep as specified in the constructor. This result is then flattened.
 
-##### Model.py
+`PCAVelocity` will do the same, but instead it takes a `70 x 70` batch size and flattens that instead.
 
-Contains the MLP Class and Trainer function. 
+#### `Model.py`
 
-### Step 1: 
+Contains the `MLP` class and `Trainer` function.
 
-GetPCAData.py will get the actual flattened PCA data to be fed into the model.  
+---
 
-This will be stored in your local directory in a folder called PCAS into train, test, and validation sets. 
+### Step 1: Running the Pipeline
 
-Then GetModel.py will use the flattened PCA data to train the model, which will also be stored in the PCAS folder. 
+`GetPCAData.py` will get the actual flattened PCA data to be fed into the model.
 
-GetVisData.py will use obtain a new batch for visualizations. 
+This data will be stored in your local directory inside a folder called `PCAS`, split into train, test, and validation sets.
 
-TLDR: Run GetPCADATA.py-->GetModel.py-->GetVisData.py. 
+Then `GetModel.py` will use the flattened PCA data to train the model, which will also be stored in the `PCAS` folder.
 
-### Step 2: 
+`GetVisData.py` will obtain a new batch for visualizations.
 
-You can then visualize the data by running the code in visualizationpca.py.
+**TLDR:** Run the following in order:
 
+* `GetPCAData.py`
+* `GetModel.py`
+* `GetVisData.py`
+
+---
+
+### Step 2: Visualize
+
+You can then visualize the data by running the code in `visualizationpca.py`.
